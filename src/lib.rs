@@ -2,8 +2,6 @@
 #![warn(missing_copy_implementations)]
 #![warn(missing_docs)]
 #![warn(nonstandard_style)]
-#![warn(rust_2018_compatibility)]
-#![warn(rust_2018_idioms)]
 #![warn(trivial_casts, trivial_numeric_casts)]
 #![warn(unused)]
 
@@ -106,7 +104,6 @@ use std::cmp::max;
 use std::fmt;
 use std::iter::repeat;
 
-extern crate unicode_width;
 use unicode_width::UnicodeWidthStr;
 
 
