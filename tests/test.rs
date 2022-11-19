@@ -46,7 +46,7 @@ fn one_item_just_over() {
 
     grid.add(Cell::from("1234567890!"));
 
-    assert_eq!(grid.fit_into_width(10), None);
+    assert!(grid.fit_into_width(10).is_none());
 }
 
 #[test]
@@ -95,7 +95,7 @@ fn two_big_items() {
         "oudisnuthasuouneohbueobaugceoduhbsauglcobeuhnaeouosbubaoecgueoubeohubeo",
     ));
 
-    assert_eq!(grid.fit_into_width(40), None);
+    assert!(grid.fit_into_width(40).is_none());
 }
 
 #[test]
@@ -188,7 +188,7 @@ fn huge_separator() {
     grid.add("a".into());
     grid.add("b".into());
 
-    assert_eq!(grid.fit_into_width(99), None);
+    assert!(grid.fit_into_width(99).is_none());
 }
 
 #[test]
