@@ -1,5 +1,5 @@
 extern crate term_grid;
-use term_grid::{Grid, GridOptions, Direction, Filling, Cell, Alignment};
+use term_grid::{Alignment, Cell, Direction, Filling, Grid, GridOptions};
 
 // This produces:
 //
@@ -13,8 +13,8 @@ use term_grid::{Grid, GridOptions, Direction, Filling, Cell, Alignment};
 
 fn main() {
     let mut grid = Grid::new(GridOptions {
-        direction:  Direction::TopToBottom,
-        filling:    Filling::Text(" | ".into()),
+        direction: Direction::TopToBottom,
+        filling: Filling::Text(" | ".into()),
     });
 
     for i in 0..48 {
@@ -25,8 +25,7 @@ fn main() {
 
     if let Some(grid_display) = grid.fit_into_width(80) {
         println!("{}", grid_display);
-    }
-    else {
+    } else {
         println!("Couldn't fit grid into 80 columns!");
     }
 }

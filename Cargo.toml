@@ -2,13 +2,14 @@
 name = "term_grid"
 description = "Library for formatting strings into a grid layout"
 
-authors = ["Benjamin Sago <ogham@bsago.me>"]
-documentation = "https://docs.rs/term_grid/"
-exclude = ["/.rustfmt.toml", "/.travis.yml"]
+authors = ["uutils developers", "Benjamin Sago <ogham@bsago.me>"]
+documentation = "https://docs.rs/uutils_term_grid/"
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/ogham/rust-term-grid"
+repository = "https://github.com/uutils/uutils-term-grid"
 version = "0.2.0"
+edition = "2021"
+rust-version = "1.56"
 
 [lib]
 name = "term_grid"

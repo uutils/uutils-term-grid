@@ -17,7 +17,7 @@ This crate works with `cargo`. Add the following to your `Cargo.toml` dependenci
 uutils_term_grid = "0.2"
 ```
 
-The Minimum Supported Rust Version is 1.31.
+The Minimum Supported Rust Version is 1.56.
 
 
 ## Usage
