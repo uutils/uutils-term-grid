@@ -448,6 +448,11 @@ impl Display<'_> {
 
 impl fmt::Display for Display<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        let separator = match &self.grid.options.filling {
+            Filling::Spaces(n) => " ".repeat(*n),
+            Filling::Text(s) => s.clone(),
+        };
+
         for y in 0..self.dimensions.num_lines {
             for x in 0..self.dimensions.widths.len() {
                 let num = match self.grid.options.direction {
@@ -461,79 +466,21 @@ impl fmt::Display for Display<'_> {
                 }
 
                 let cell = &self.grid.cells[num];
-                if x == self.dimensions.widths.len() - 1 {
-                    match cell.alignment {
-                        Alignment::Left => {
-                            // The final column doesn’t need to have trailing spaces,
-                            // as long as it’s left-aligned.
-                            write!(f, "{}", cell.contents)?;
-                        }
-                        Alignment::Right => {
-                            write!(
-                                f,
-                                "{}",
-                                pad_string(
-                                    &cell.contents,
-                                    self.dimensions.widths[x],
-                                    Alignment::Right
-                                )
-                            )?;
-                        }
-                    }
-                } else {
-                    assert!(self.dimensions.widths[x] >= cell.width);
-                    match (&self.grid.options.filling, cell.alignment) {
-                        (Filling::Spaces(n), Alignment::Left) => {
-                            write!(
-                                f,
-                                "{}",
-                                pad_string(
-                                    &cell.contents,
-                                    self.dimensions.widths[x] + n,
-                                    cell.alignment
-                                )
-                            )?;
-                        }
-                        (Filling::Spaces(n), Alignment::Right) => {
-                            let s = " ".repeat(*n);
-                            write!(
-                                f,
-                                "{}{}",
-                                pad_string(
-                                    &cell.contents,
-                                    self.dimensions.widths[x],
-                                    cell.alignment
-                                ),
-                                s
-                            )?;
-                        }
-                        (Filling::Text(ref t), _) => {
-                            write!(
-                                f,
-                                "{}{}",
-                                pad_string(
-                                    &cell.contents,
-                                    self.dimensions.widths[x],
-                                    cell.alignment
-                                ),
-                                t
-                            )?;
-                        }
-                    }
-                }
-            }
+                let contents = &cell.contents;
+                let width = self.dimensions.widths[x];
+                let last_in_row = x == self.dimensions.widths.len() - 1;
 
-            writeln!(f)?;
+                // The final column doesn’t need to have trailing spaces,
+                // as long as it’s left-aligned.
+                match cell.alignment {
+                    Alignment::Left if last_in_row => writeln!(f, "{}", contents)?,
+                    Alignment::Right if last_in_row => writeln!(f, "{contents:>width$}")?,
+                    Alignment::Left => write!(f, "{contents:<width$}{separator}")?,
+                    Alignment::Right => write!(f, "{contents:>width$}{separator}")?,
+                };
+            }
         }
 
         Ok(())
-    }
-}
-
-/// Pad a string with the given alignment and size.
-fn pad_string(string: &str, size: usize, alignment: Alignment) -> String {
-    match alignment {
-        Alignment::Left => format!("{string:<size$}"),
-        Alignment::Right => format!("{string:>size$}"),
     }
 }
