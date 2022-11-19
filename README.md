@@ -1,27 +1,23 @@
-# rust-term-grid [![term-grid on crates.io][crates-badge]][crates-url] [![Minimum Rust Version 1.31.0][rustc-badge]][rustc-url] [![Build status][travis-badge]][travis-url]
-
-[crates-badge]: https://meritbadge.herokuapp.com/term-grid
-[crates-url]: https://crates.io/crates/term-grid
-[travis-badge]: https://travis-ci.org/ogham/rust-term-grid.svg?branch=master
-[travis-url]: https://travis-ci.org/github/ogham/rust-term-grid
-[rustc-badge]: https://img.shields.io/badge/rustc-1.31+-lightgray.svg
-[rustc-url]: https://blog.rust-lang.org/2018/12/06/Rust-1.31-and-rust-2018.html
+# uutils-term-grid
 
 This library arranges textual data in a grid format suitable for fixed-width fonts, using an algorithm to minimise the amount of space needed.
 
-### [View the Rustdoc](https://docs.rs/term_grid)
+---
 
+This library is forked from the [`rust-term-grid`](https://github.com/ogham/rust-term-grid) library.
+
+---
 
 # Installation
 
-This crate works with [Cargo](https://crates.io). Add the following to your `Cargo.toml` dependencies section:
+This crate works with `cargo`. Add the following to your `Cargo.toml` dependencies section:
 
 ```toml
 [dependencies]
-term_grid = "0.2"
+uutils_term_grid = "0.2"
 ```
 
-The earliest version of Rust that this crate is tested against is [Rust v1.31.0][rustc-url].
+The Minimum Supported Rust Version is 1.31.
 
 
 ## Usage
