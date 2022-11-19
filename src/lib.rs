@@ -469,11 +469,14 @@ impl fmt::Display for Display<'_> {
                             write!(f, "{}", cell.contents)?;
                         }
                         Alignment::Right => {
-                            let extra_spaces = self.dimensions.widths[x] - cell.width;
                             write!(
                                 f,
                                 "{}",
-                                pad_string(&cell.contents, extra_spaces, Alignment::Right)
+                                pad_string(
+                                    &cell.contents,
+                                    self.dimensions.widths[x],
+                                    Alignment::Right
+                                )
                             )?;
                         }
                     }
@@ -481,29 +484,38 @@ impl fmt::Display for Display<'_> {
                     assert!(self.dimensions.widths[x] >= cell.width);
                     match (&self.grid.options.filling, cell.alignment) {
                         (Filling::Spaces(n), Alignment::Left) => {
-                            let extra_spaces = self.dimensions.widths[x] - cell.width + n;
                             write!(
                                 f,
                                 "{}",
-                                pad_string(&cell.contents, extra_spaces, cell.alignment)
+                                pad_string(
+                                    &cell.contents,
+                                    self.dimensions.widths[x] + n,
+                                    cell.alignment
+                                )
                             )?;
                         }
                         (Filling::Spaces(n), Alignment::Right) => {
-                            let s = spaces(*n);
-                            let extra_spaces = self.dimensions.widths[x] - cell.width;
+                            let s = " ".repeat(*n);
                             write!(
                                 f,
                                 "{}{}",
-                                pad_string(&cell.contents, extra_spaces, cell.alignment),
+                                pad_string(
+                                    &cell.contents,
+                                    self.dimensions.widths[x],
+                                    cell.alignment
+                                ),
                                 s
                             )?;
                         }
                         (Filling::Text(ref t), _) => {
-                            let extra_spaces = self.dimensions.widths[x] - cell.width;
                             write!(
                                 f,
                                 "{}{}",
-                                pad_string(&cell.contents, extra_spaces, cell.alignment),
+                                pad_string(
+                                    &cell.contents,
+                                    self.dimensions.widths[x],
+                                    cell.alignment
+                                ),
                                 t
                             )?;
                         }
@@ -518,19 +530,10 @@ impl fmt::Display for Display<'_> {
     }
 }
 
-/// Pad a string with the given number of spaces.
-fn spaces(length: usize) -> String {
-    " ".repeat(length)
-}
-
-/// Pad a string with the given alignment and number of spaces.
-///
-/// This doesn’t take the width the string *should* be, rather the number
-/// of spaces to add.
-fn pad_string(string: &str, padding: usize, alignment: Alignment) -> String {
-    if alignment == Alignment::Left {
-        format!("{}{}", string, spaces(padding))
-    } else {
-        format!("{}{}", spaces(padding), string)
+/// Pad a string with the given alignment and size.
+fn pad_string(string: &str, size: usize, alignment: Alignment) -> String {
+    match alignment {
+        Alignment::Left => format!("{string:<size$}"),
+        Alignment::Right => format!("{string:>size$}"),
     }
 }
