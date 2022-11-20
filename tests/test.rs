@@ -205,3 +205,133 @@ fn huge_yet_unused_separator() {
     assert_eq!(display.width(), 4);
     assert_eq!("abcd\n", display.to_string());
 }
+
+// Note: This behaviour is right or wrong depending on your terminal
+// This test is mostly added so that we don't change our current
+// behaviour, unless we explictly want to do that.
+#[test]
+fn emoji() {
+    let mut grid = Grid::new(GridOptions {
+        direction: Direction::LeftToRight,
+        filling: Filling::Spaces(2),
+    });
+
+    for s in ["hello", "🦀", "👩‍🔬"] {
+        let mut cell = Cell::from(s);
+        cell.alignment = Alignment::Right;
+        grid.add(cell);
+    }
+
+    let display = grid.fit_into_width(7).unwrap();
+    assert_eq!("hello\n   🦀\n 👩‍🔬\n", display.to_string());
+}
+
+// These test are based on the tests in uutils ls, to ensure we won't break
+// it while editing this library.
+mod uutils_ls {
+    use super::*;
+
+    #[test]
+    fn different_widths() {
+        for (width, expected) in [
+            (
+                100,
+                "test-width-1  test-width-2  test-width-3  test-width-4\n",
+            ),
+            (
+                50,
+                "test-width-1  test-width-3\ntest-width-2  test-width-4\n",
+            ),
+            (
+                25,
+                "test-width-1\ntest-width-2\ntest-width-3\ntest-width-4\n",
+            ),
+        ] {
+            let mut grid = Grid::new(GridOptions {
+                direction: Direction::TopToBottom,
+                filling: Filling::Spaces(2),
+            });
+
+            for s in [
+                "test-width-1",
+                "test-width-2",
+                "test-width-3",
+                "test-width-4",
+            ] {
+                let mut cell = Cell::from(s);
+                cell.alignment = Alignment::Left;
+                grid.add(cell);
+            }
+
+            let display = grid.fit_into_width(width).unwrap();
+            assert_eq!(expected, display.to_string());
+        }
+    }
+
+    #[test]
+    fn across_width_30() {
+        let mut grid = Grid::new(GridOptions {
+            direction: Direction::LeftToRight,
+            filling: Filling::Spaces(2),
+        });
+
+        for s in [
+            "test-across1",
+            "test-across2",
+            "test-across3",
+            "test-across4",
+        ] {
+            let mut cell = Cell::from(s);
+            cell.alignment = Alignment::Left;
+            grid.add(cell);
+        }
+
+        let display = grid.fit_into_width(30).unwrap();
+        assert_eq!(
+            "test-across1  test-across2\ntest-across3  test-across4\n",
+            display.to_string()
+        );
+    }
+
+    #[test]
+    fn columns_width_30() {
+        let mut grid = Grid::new(GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Spaces(2),
+        });
+
+        for s in [
+            "test-columns1",
+            "test-columns2",
+            "test-columns3",
+            "test-columns4",
+        ] {
+            let mut cell = Cell::from(s);
+            cell.alignment = Alignment::Left;
+            grid.add(cell);
+        }
+
+        let display = grid.fit_into_width(30).unwrap();
+        assert_eq!(
+            "test-columns1  test-columns3\ntest-columns2  test-columns4\n",
+            display.to_string()
+        );
+    }
+
+    #[test]
+    fn three_short_one_long() {
+        let mut grid = Grid::new(GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Spaces(2),
+        });
+
+        for s in ["a", "b", "a-long-name", "z"] {
+            let mut cell = Cell::from(s);
+            cell.alignment = Alignment::Left;
+            grid.add(cell);
+        }
+
+        let display = grid.fit_into_width(15).unwrap();
+        assert_eq!("a  a-long-name\nb  z\n", display.to_string());
+    }
+}
