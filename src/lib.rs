@@ -431,6 +431,16 @@ impl fmt::Display for Display<'_> {
             Filling::Text(s) => s.clone(),
         };
 
+        // Initialize a buffer of spaces. The idea here is that any cell
+        // that needs padding gets a slice of this buffer of the needed
+        // size. This avoids the need of creating a string of spaces for
+        // each cell that needs padding.
+        //
+        // We overestimate how many spaces we need, but this is not
+        // part of the loop and it's therefore not super important to
+        // get exactly right.
+        let padding = " ".repeat(self.grid.widest_cell_length);
+
         for y in 0..self.dimensions.num_lines {
             for x in 0..self.dimensions.widths.len() {
                 let num = match self.grid.options.direction {
@@ -445,17 +455,46 @@ impl fmt::Display for Display<'_> {
 
                 let cell = &self.grid.cells[num];
                 let contents = &cell.contents;
-                let width = self.dimensions.widths[x];
                 let last_in_row = x == self.dimensions.widths.len() - 1;
+
+                let col_width = self.dimensions.widths[x];
+                let padding_size = col_width - cell.width;
 
                 // The final column doesn’t need to have trailing spaces,
                 // as long as it’s left-aligned.
+                //
+                // We use write_str directly instead of a the write! macro to
+                // avoid some of the formatting overhead. For example, if we pad
+                // using `write!("{contents:>width}")`, the unicode width will
+                // have to be independently calculated by the macro, which is slow and
+                // redundant because we already know the width.
+                //
+                // For the padding, we instead slice into a buffer of spaces defined
+                // above, so we don't need to call `" ".repeat(n)` each loop.
+                // We also only call `write_str` when we actually need padding as
+                // another optimization.
                 match cell.alignment {
-                    Alignment::Left if last_in_row => writeln!(f, "{}", contents)?,
-                    Alignment::Right if last_in_row => writeln!(f, "{contents:>width$}")?,
-                    Alignment::Left => write!(f, "{contents:<width$}{separator}")?,
-                    Alignment::Right => write!(f, "{contents:>width$}{separator}")?,
+                    Alignment::Left if last_in_row => {
+                        f.write_str(contents)?;
+                    }
+                    Alignment::Left => {
+                        f.write_str(contents)?;
+                        if padding_size > 0 {
+                            f.write_str(&padding[0..padding_size])?;
+                        }
+                    }
+                    Alignment::Right => {
+                        if padding_size > 0 {
+                            f.write_str(&padding[0..padding_size])?;
+                        }
+                        f.write_str(contents)?;
+                    }
                 };
+                if last_in_row {
+                    f.write_str("\n")?;
+                } else {
+                    f.write_str(&separator)?;
+                }
             }
         }
 
