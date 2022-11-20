@@ -97,10 +97,7 @@
 //! [`fit_into_width`]: ./struct.Grid.html#method.fit_into_width
 //! [`GridOptions`]: ./struct.GridOptions.html
 
-use std::cmp::max;
 use std::fmt;
-use std::iter::repeat;
-
 use unicode_width::UnicodeWidthStr;
 
 /// Alignment indicate on which side the content should stick if some filling
@@ -289,13 +286,15 @@ impl Grid {
     }
 
     fn column_widths(&self, num_lines: usize, num_columns: usize) -> Dimensions {
-        let mut widths: Vec<Width> = repeat(0).take(num_columns).collect();
+        let mut widths = vec![0; num_columns];
         for (index, cell) in self.cells.iter().enumerate() {
             let index = match self.options.direction {
                 Direction::LeftToRight => index % num_columns,
                 Direction::TopToBottom => index / num_lines,
             };
-            widths[index] = max(widths[index], cell.width);
+            if cell.width > widths[index] {
+                widths[index] = cell.width;
+            }
         }
 
         Dimensions { num_lines, widths }
@@ -306,7 +305,7 @@ impl Grid {
         let mut widths: Vec<_> = self.cells.iter().map(|c| c.width).collect();
 
         // Sort widths in reverse order
-        widths.sort_unstable_by(|a, b| b.cmp(&a));
+        widths.sort_unstable_by(|a, b| b.cmp(a));
 
         let mut col_total_width_so_far = 0;
         for (i, width) in widths.iter().enumerate() {
@@ -350,15 +349,7 @@ impl Grid {
             // for small inputs.
             return Some(Dimensions {
                 num_lines: 1,
-                // I clone self.cells twice. Once here, and once in
-                // self.theoretical_max_num_lines. Perhaps not the best for
-                // performance?
-                widths: self
-                    .cells
-                    .clone()
-                    .into_iter()
-                    .map(|cell| cell.width)
-                    .collect(),
+                widths: self.cells.iter().map(|cell| cell.width).collect(),
             });
         }
         // Instead of numbers of columns, try to find the fewest number of *lines*
