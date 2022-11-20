@@ -1,3 +1,8 @@
+[![Crates.io](https://img.shields.io/crates/v/uutils-term-grid.svg)](https://crates.io/crates/uutils-term-grid)
+[![dependency status](https://deps.rs/repo/github/uutils/uutils-term-grid/status.svg)](https://deps.rs/repo/github/uutils/uutils-term-grid)
+[![CodeCov](https://codecov.io/gh/uutils/uutils-term-grid/branch/master/graph/badge.svg)](https://codecov.io/gh/uutils/uutils-term-grid)
+
+
 # uutils-term-grid
 
 This library arranges textual data in a grid format suitable for fixed-width fonts, using an algorithm to minimise the amount of space needed.
