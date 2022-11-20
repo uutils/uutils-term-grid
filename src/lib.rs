@@ -284,11 +284,7 @@ impl Grid {
     }
 
     fn columns_dimensions(&self, num_columns: usize) -> Dimensions {
-        let mut num_lines = self.cells.len() / num_columns;
-        if self.cells.len() % num_columns != 0 {
-            num_lines += 1;
-        }
-
+        let num_lines = div_ceil(self.cells.len(), num_columns);
         self.column_widths(num_lines, num_columns)
     }
 
@@ -307,24 +303,18 @@ impl Grid {
 
     fn theoretical_max_num_lines(&self, maximum_width: usize) -> usize {
         // TODO: Make code readable / efficient.
-        let mut theoretical_min_num_cols = 0;
+        let mut widths: Vec<_> = self.cells.iter().map(|c| c.width).collect();
+
+        // Sort widths in reverse order
+        widths.sort_unstable_by(|a, b| b.cmp(&a));
+
         let mut col_total_width_so_far = 0;
-
-        let mut cells = self.cells.clone();
-        cells.sort_unstable_by(|a, b| b.width.cmp(&a.width)); // Sort in reverse order
-
-        for cell in &cells {
-            if cell.width + col_total_width_so_far <= maximum_width {
-                theoretical_min_num_cols += 1;
-                col_total_width_so_far += cell.width;
+        for (i, width) in widths.iter().enumerate() {
+            if width + col_total_width_so_far <= maximum_width {
+                col_total_width_so_far += self.options.filling.width() + width;
             } else {
-                let mut theoretical_max_num_lines = self.cell_count / theoretical_min_num_cols;
-                if self.cell_count % theoretical_min_num_cols != 0 {
-                    theoretical_max_num_lines += 1;
-                }
-                return theoretical_max_num_lines;
+                return div_ceil(self.cell_count, i);
             }
-            col_total_width_so_far += self.options.filling.width()
         }
 
         // If we make it to this point, we have exhausted all cells before
@@ -377,10 +367,7 @@ impl Grid {
         for num_lines in (1..=theoretical_max_num_lines).rev() {
             // The number of columns is the number of cells divided by the number
             // of lines, *rounded up*.
-            let mut num_columns = self.cell_count / num_lines;
-            if self.cell_count % num_lines != 0 {
-                num_columns += 1;
-            }
+            let num_columns = div_ceil(self.cell_count, num_lines);
 
             // Early abort: if there are so many columns that the width of the
             // *column separators* is bigger than the width of the screen, then
@@ -482,5 +469,18 @@ impl fmt::Display for Display<'_> {
         }
 
         Ok(())
+    }
+}
+
+// Adapted from the unstable API:
+// https://doc.rust-lang.org/std/primitive.usize.html#method.div_ceil
+/// Division with upward rouding
+pub const fn div_ceil(lhs: usize, rhs: usize) -> usize {
+    let d = lhs / rhs;
+    let r = lhs % rhs;
+    if r > 0 && rhs > 0 {
+        d + 1
+    } else {
+        d
     }
 }
