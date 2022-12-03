@@ -409,7 +409,7 @@ impl Grid {
                     adjusted_width = maximum_width - total_separator_width;
                     potential_dimensions = self.column_widths(num_lines, num_columns);
                 } else {
-                    break
+                    break;
                 }
             }
         }
