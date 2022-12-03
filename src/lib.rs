@@ -414,7 +414,7 @@ impl Grid {
             }
         }
 
-        None
+        smallest_dimensions_yet
     }
 }
 
