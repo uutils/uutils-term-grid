@@ -490,12 +490,11 @@ impl fmt::Display for Display<'_> {
                         f.write_str(contents)?;
                     }
                 };
-                if last_in_row {
-                    f.write_str("\n")?;
-                } else {
+                if !last_in_row {
                     f.write_str(&separator)?;
                 }
             }
+            f.write_str("\n")?;
         }
 
         Ok(())
