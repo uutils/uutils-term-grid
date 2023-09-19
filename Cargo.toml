@@ -15,4 +15,4 @@ rust-version = "1.56"
 name = "term_grid"
 
 [dependencies]
-unicode-width = "0.1.7"
+unicode-width = "0.1.11"
