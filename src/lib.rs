@@ -100,17 +100,6 @@
 use std::fmt;
 use unicode_width::UnicodeWidthStr;
 
-/// Alignment indicate on which side the content should stick if some filling
-/// is required.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Alignment {
-    /// The content will stick to the left.
-    Left,
-
-    /// The content will stick to the right.
-    Right,
-}
-
 /// A **Cell** is the combination of a string and its pre-computed length.
 ///
 /// The easiest way to create a Cell is just by using `string.into()`, which
@@ -123,9 +112,6 @@ pub struct Cell {
 
     /// The pre-computed length of the string.
     pub width: Width,
-
-    /// The side (left/right) to align the content if some filling is required.
-    pub alignment: Alignment,
 }
 
 impl From<String> for Cell {
@@ -133,7 +119,6 @@ impl From<String> for Cell {
         Self {
             width: UnicodeWidthStr::width(&*string),
             contents: string,
-            alignment: Alignment::Left,
         }
     }
 }
@@ -143,7 +128,6 @@ impl<'a> From<&'a str> for Cell {
         Self {
             width: UnicodeWidthStr::width(string),
             contents: string.into(),
-            alignment: Alignment::Left,
         }
     }
 }
@@ -473,24 +457,11 @@ impl fmt::Display for Display<'_> {
                 // above, so we don't need to call `" ".repeat(n)` each loop.
                 // We also only call `write_str` when we actually need padding as
                 // another optimization.
-                match cell.alignment {
-                    Alignment::Left if last_in_row => {
-                        f.write_str(contents)?;
-                    }
-                    Alignment::Left => {
-                        f.write_str(contents)?;
-                        if padding_size > 0 {
-                            f.write_str(&padding[0..padding_size])?;
-                        }
-                    }
-                    Alignment::Right => {
-                        if padding_size > 0 {
-                            f.write_str(&padding[0..padding_size])?;
-                        }
-                        f.write_str(contents)?;
-                    }
-                };
+                f.write_str(contents)?;
                 if !last_in_row {
+                    if padding_size > 0 {
+                        f.write_str(&padding[0..padding_size])?;
+                    }
                     f.write_str(&separator)?;
                 }
             }
