@@ -97,10 +97,7 @@
 //! [`fit_into_width`]: ./struct.Grid.html#method.fit_into_width
 //! [`GridOptions`]: ./struct.GridOptions.html
 
-use std::cmp::max;
 use std::fmt;
-use std::iter::repeat;
-
 use unicode_width::UnicodeWidthStr;
 
 /// Alignment indicate on which side the content should stick if some filling
@@ -284,22 +281,20 @@ impl Grid {
     }
 
     fn columns_dimensions(&self, num_columns: usize) -> Dimensions {
-        let mut num_lines = self.cells.len() / num_columns;
-        if self.cells.len() % num_columns != 0 {
-            num_lines += 1;
-        }
-
+        let num_lines = div_ceil(self.cells.len(), num_columns);
         self.column_widths(num_lines, num_columns)
     }
 
     fn column_widths(&self, num_lines: usize, num_columns: usize) -> Dimensions {
-        let mut widths: Vec<Width> = repeat(0).take(num_columns).collect();
+        let mut widths = vec![0; num_columns];
         for (index, cell) in self.cells.iter().enumerate() {
             let index = match self.options.direction {
                 Direction::LeftToRight => index % num_columns,
                 Direction::TopToBottom => index / num_lines,
             };
-            widths[index] = max(widths[index], cell.width);
+            if cell.width > widths[index] {
+                widths[index] = cell.width;
+            }
         }
 
         Dimensions { num_lines, widths }
@@ -307,24 +302,18 @@ impl Grid {
 
     fn theoretical_max_num_lines(&self, maximum_width: usize) -> usize {
         // TODO: Make code readable / efficient.
-        let mut theoretical_min_num_cols = 0;
+        let mut widths: Vec<_> = self.cells.iter().map(|c| c.width).collect();
+
+        // Sort widths in reverse order
+        widths.sort_unstable_by(|a, b| b.cmp(a));
+
         let mut col_total_width_so_far = 0;
-
-        let mut cells = self.cells.clone();
-        cells.sort_unstable_by(|a, b| b.width.cmp(&a.width)); // Sort in reverse order
-
-        for cell in &cells {
-            if cell.width + col_total_width_so_far <= maximum_width {
-                theoretical_min_num_cols += 1;
-                col_total_width_so_far += cell.width;
+        for (i, width) in widths.iter().enumerate() {
+            if width + col_total_width_so_far <= maximum_width {
+                col_total_width_so_far += self.options.filling.width() + width;
             } else {
-                let mut theoretical_max_num_lines = self.cell_count / theoretical_min_num_cols;
-                if self.cell_count % theoretical_min_num_cols != 0 {
-                    theoretical_max_num_lines += 1;
-                }
-                return theoretical_max_num_lines;
+                return div_ceil(self.cell_count, i);
             }
-            col_total_width_so_far += self.options.filling.width()
         }
 
         // If we make it to this point, we have exhausted all cells before
@@ -360,15 +349,7 @@ impl Grid {
             // for small inputs.
             return Some(Dimensions {
                 num_lines: 1,
-                // I clone self.cells twice. Once here, and once in
-                // self.theoretical_max_num_lines. Perhaps not the best for
-                // performance?
-                widths: self
-                    .cells
-                    .clone()
-                    .into_iter()
-                    .map(|cell| cell.width)
-                    .collect(),
+                widths: self.cells.iter().map(|cell| cell.width).collect(),
             });
         }
         // Instead of numbers of columns, try to find the fewest number of *lines*
@@ -377,10 +358,7 @@ impl Grid {
         for num_lines in (1..=theoretical_max_num_lines).rev() {
             // The number of columns is the number of cells divided by the number
             // of lines, *rounded up*.
-            let mut num_columns = self.cell_count / num_lines;
-            if self.cell_count % num_lines != 0 {
-                num_columns += 1;
-            }
+            let num_columns = div_ceil(self.cell_count, num_lines);
 
             // Early abort: if there are so many columns that the width of the
             // *column separators* is bigger than the width of the screen, then
@@ -448,6 +426,21 @@ impl Display<'_> {
 
 impl fmt::Display for Display<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        let separator = match &self.grid.options.filling {
+            Filling::Spaces(n) => " ".repeat(*n),
+            Filling::Text(s) => s.clone(),
+        };
+
+        // Initialize a buffer of spaces. The idea here is that any cell
+        // that needs padding gets a slice of this buffer of the needed
+        // size. This avoids the need of creating a string of spaces for
+        // each cell that needs padding.
+        //
+        // We overestimate how many spaces we need, but this is not
+        // part of the loop and it's therefore not super important to
+        // get exactly right.
+        let padding = " ".repeat(self.grid.widest_cell_length);
+
         for y in 0..self.dimensions.num_lines {
             for x in 0..self.dimensions.widths.len() {
                 let num = match self.grid.options.direction {
@@ -461,76 +454,62 @@ impl fmt::Display for Display<'_> {
                 }
 
                 let cell = &self.grid.cells[num];
-                if x == self.dimensions.widths.len() - 1 {
-                    match cell.alignment {
-                        Alignment::Left => {
-                            // The final column doesn’t need to have trailing spaces,
-                            // as long as it’s left-aligned.
-                            write!(f, "{}", cell.contents)?;
-                        }
-                        Alignment::Right => {
-                            let extra_spaces = self.dimensions.widths[x] - cell.width;
-                            write!(
-                                f,
-                                "{}",
-                                pad_string(&cell.contents, extra_spaces, Alignment::Right)
-                            )?;
+                let contents = &cell.contents;
+                let last_in_row = x == self.dimensions.widths.len() - 1;
+
+                let col_width = self.dimensions.widths[x];
+                let padding_size = col_width - cell.width;
+
+                // The final column doesn’t need to have trailing spaces,
+                // as long as it’s left-aligned.
+                //
+                // We use write_str directly instead of a the write! macro to
+                // avoid some of the formatting overhead. For example, if we pad
+                // using `write!("{contents:>width}")`, the unicode width will
+                // have to be independently calculated by the macro, which is slow and
+                // redundant because we already know the width.
+                //
+                // For the padding, we instead slice into a buffer of spaces defined
+                // above, so we don't need to call `" ".repeat(n)` each loop.
+                // We also only call `write_str` when we actually need padding as
+                // another optimization.
+                match cell.alignment {
+                    Alignment::Left if last_in_row => {
+                        f.write_str(contents)?;
+                    }
+                    Alignment::Left => {
+                        f.write_str(contents)?;
+                        if padding_size > 0 {
+                            f.write_str(&padding[0..padding_size])?;
                         }
                     }
-                } else {
-                    assert!(self.dimensions.widths[x] >= cell.width);
-                    match (&self.grid.options.filling, cell.alignment) {
-                        (Filling::Spaces(n), Alignment::Left) => {
-                            let extra_spaces = self.dimensions.widths[x] - cell.width + n;
-                            write!(
-                                f,
-                                "{}",
-                                pad_string(&cell.contents, extra_spaces, cell.alignment)
-                            )?;
+                    Alignment::Right => {
+                        if padding_size > 0 {
+                            f.write_str(&padding[0..padding_size])?;
                         }
-                        (Filling::Spaces(n), Alignment::Right) => {
-                            let s = spaces(*n);
-                            let extra_spaces = self.dimensions.widths[x] - cell.width;
-                            write!(
-                                f,
-                                "{}{}",
-                                pad_string(&cell.contents, extra_spaces, cell.alignment),
-                                s
-                            )?;
-                        }
-                        (Filling::Text(ref t), _) => {
-                            let extra_spaces = self.dimensions.widths[x] - cell.width;
-                            write!(
-                                f,
-                                "{}{}",
-                                pad_string(&cell.contents, extra_spaces, cell.alignment),
-                                t
-                            )?;
-                        }
+                        f.write_str(contents)?;
                     }
+                };
+                if !last_in_row {
+                    f.write_str(&separator)?;
                 }
             }
-
-            writeln!(f)?;
+            f.write_str("\n")?;
         }
 
         Ok(())
     }
 }
 
-/// Pad a string with the given number of spaces.
-fn spaces(length: usize) -> String {
-    " ".repeat(length)
-}
-
-/// Pad a string with the given alignment and number of spaces.
-///
-/// This doesn’t take the width the string *should* be, rather the number
-/// of spaces to add.
-fn pad_string(string: &str, padding: usize, alignment: Alignment) -> String {
-    if alignment == Alignment::Left {
-        format!("{}{}", string, spaces(padding))
+// Adapted from the unstable API:
+// https://doc.rust-lang.org/std/primitive.usize.html#method.div_ceil
+/// Division with upward rouding
+pub const fn div_ceil(lhs: usize, rhs: usize) -> usize {
+    let d = lhs / rhs;
+    let r = lhs % rhs;
+    if r > 0 && rhs > 0 {
+        d + 1
     } else {
-        format!("{}{}", spaces(padding), string)
+        d
     }
 }
