@@ -1,4 +1,4 @@
-use term_grid::{Alignment, Cell, Direction, Filling, Grid, GridOptions};
+use term_grid::{Cell, Direction, Filling, Grid, GridOptions};
 
 #[test]
 fn no_items() {
@@ -137,48 +137,6 @@ fn number_grid_with_pipe() {
 }
 
 #[test]
-fn numbers_right() {
-    let mut grid = Grid::new(GridOptions {
-        filling: Filling::Spaces(1),
-        direction: Direction::LeftToRight,
-    });
-
-    for s in &[
-        "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven",
-        "twelve",
-    ] {
-        let mut cell = Cell::from(*s);
-        cell.alignment = Alignment::Right;
-        grid.add(cell);
-    }
-
-    let bits = " one two  three   four\nfive six  seven  eight\nnine ten eleven twelve\n";
-    assert_eq!(grid.fit_into_width(24).unwrap().to_string(), bits);
-    assert_eq!(grid.fit_into_width(24).unwrap().row_count(), 3);
-}
-
-#[test]
-fn numbers_right_pipe() {
-    let mut grid = Grid::new(GridOptions {
-        filling: Filling::Text("|".into()),
-        direction: Direction::LeftToRight,
-    });
-
-    for s in &[
-        "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven",
-        "twelve",
-    ] {
-        let mut cell = Cell::from(*s);
-        cell.alignment = Alignment::Right;
-        grid.add(cell);
-    }
-
-    let bits = " one|two| three|  four\nfive|six| seven| eight\nnine|ten|eleven|twelve\n";
-    assert_eq!(grid.fit_into_width(24).unwrap().to_string(), bits);
-    assert_eq!(grid.fit_into_width(24).unwrap().row_count(), 3);
-}
-
-#[test]
 fn huge_separator() {
     let mut grid = Grid::new(GridOptions {
         filling: Filling::Spaces(100),
@@ -208,7 +166,7 @@ fn huge_yet_unused_separator() {
 
 // Note: This behaviour is right or wrong depending on your terminal
 // This test is mostly added so that we don't change our current
-// behaviour, unless we explictly want to do that.
+// behaviour, unless we explicitly want to do that.
 #[test]
 fn emoji() {
     let mut grid = Grid::new(GridOptions {
@@ -216,14 +174,12 @@ fn emoji() {
         filling: Filling::Spaces(2),
     });
 
-    for s in ["hello", "🦀", "👩‍🔬"] {
-        let mut cell = Cell::from(s);
-        cell.alignment = Alignment::Right;
-        grid.add(cell);
+    for s in ["🦀", "hello", "👩‍🔬", "hello"] {
+        grid.add(s.into());
     }
 
-    let display = grid.fit_into_width(7).unwrap();
-    assert_eq!("hello\n   🦀\n 👩‍🔬\n", display.to_string());
+    let display = grid.fit_into_width(12).unwrap();
+    assert_eq!("🦀    hello\n👩‍🔬  hello\n", display.to_string());
 }
 
 // These test are based on the tests in uutils ls, to ensure we won't break
@@ -258,9 +214,7 @@ mod uutils_ls {
                 "test-width-3",
                 "test-width-4",
             ] {
-                let mut cell = Cell::from(s);
-                cell.alignment = Alignment::Left;
-                grid.add(cell);
+                grid.add(s.into());
             }
 
             let display = grid.fit_into_width(width).unwrap();
@@ -281,9 +235,7 @@ mod uutils_ls {
             "test-across3",
             "test-across4",
         ] {
-            let mut cell = Cell::from(s);
-            cell.alignment = Alignment::Left;
-            grid.add(cell);
+            grid.add(s.into());
         }
 
         let display = grid.fit_into_width(30).unwrap();
@@ -306,9 +258,7 @@ mod uutils_ls {
             "test-columns3",
             "test-columns4",
         ] {
-            let mut cell = Cell::from(s);
-            cell.alignment = Alignment::Left;
-            grid.add(cell);
+            grid.add(s.into());
         }
 
         let display = grid.fit_into_width(30).unwrap();
@@ -326,9 +276,7 @@ mod uutils_ls {
         });
 
         for s in ["a", "b", "a-long-name", "z"] {
-            let mut cell = Cell::from(s);
-            cell.alignment = Alignment::Left;
-            grid.add(cell);
+            grid.add(s.into());
         }
 
         let display = grid.fit_into_width(15).unwrap();

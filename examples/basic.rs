@@ -1,5 +1,5 @@
 extern crate term_grid;
-use term_grid::{Alignment, Cell, Direction, Filling, Grid, GridOptions};
+use term_grid::{Cell, Direction, Filling, Grid, GridOptions};
 
 // This produces:
 //
@@ -18,8 +18,7 @@ fn main() {
     });
 
     for i in 0..48 {
-        let mut cell = Cell::from(format!("{}", 2_isize.pow(i)));
-        cell.alignment = Alignment::Right;
+        let cell = Cell::from(2_isize.pow(i).to_string());
         grid.add(cell)
     }
 
