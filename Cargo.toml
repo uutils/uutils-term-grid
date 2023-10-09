@@ -1,15 +1,15 @@
 [package]
-name = "term_grid"
-description = "Library for formatting strings into a grid layout"
+name = "uutils_term_grid"
+description = "Library for formatting strings into a grid layout. Fork of term_grid."
 
 authors = ["uutils developers", "Benjamin Sago <ogham@bsago.me>"]
 documentation = "https://docs.rs/uutils_term_grid/"
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/uutils/uutils-term-grid"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
-rust-version = "1.56"
+rust-version = "1.70"
 
 [lib]
 name = "term_grid"
