@@ -151,8 +151,11 @@ pub type Width = usize;
 /// This does not include any spaces used when aligning cells.
 #[derive(PartialEq, Eq, Debug)]
 pub enum Filling {
-    /// A certain number of spaces should be used as the separator.
+    /// Use a specific number of spaces as the separator.
     Spaces(Width),
+
+    /// Use a specific number of tabs as the separator.
+    Tabs(Width),
 
     /// An arbitrary string.
     /// `"|"` is a common choice.
@@ -163,6 +166,7 @@ impl Filling {
     fn width(&self) -> Width {
         match *self {
             Filling::Spaces(w) => w,
+            Filling::Tabs(w) => w,
             Filling::Text(ref t) => UnicodeWidthStr::width(&t[..]),
         }
     }
@@ -412,6 +416,7 @@ impl fmt::Display for Display<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let separator = match &self.grid.options.filling {
             Filling::Spaces(n) => " ".repeat(*n),
+            Filling::Tabs(n) => "\t".to_string().repeat(*n),
             Filling::Text(s) => s.clone(),
         };
 
