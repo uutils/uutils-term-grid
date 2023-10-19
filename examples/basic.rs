@@ -15,6 +15,7 @@ fn main() {
     let mut grid = Grid::new(GridOptions {
         direction: Direction::TopToBottom,
         filling: Filling::Text(" | ".into()),
+        ..Default::default()
     });
 
     for i in 0..48 {

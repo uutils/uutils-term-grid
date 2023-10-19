@@ -154,9 +154,6 @@ pub enum Filling {
     /// Use a specific number of spaces as the separator.
     Spaces(Width),
 
-    /// Use a specific number of tabs as the separator.
-    Tabs(Width),
-
     /// An arbitrary string.
     /// `"|"` is a common choice.
     Text(String),
@@ -166,7 +163,6 @@ impl Filling {
     fn width(&self) -> Width {
         match *self {
             Filling::Spaces(w) => w,
-            Filling::Tabs(w) => w,
             Filling::Text(ref t) => UnicodeWidthStr::width(&t[..]),
         }
     }
@@ -182,6 +178,19 @@ pub struct GridOptions {
 
     /// The number of spaces to put in between each column of cells.
     pub filling: Filling,
+
+    /// The size of the tab field based on space (default: 8 spaces).
+    pub tab_size: usize,
+}
+
+impl Default for GridOptions {
+    fn default() -> Self {
+        GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Spaces(1),
+            tab_size: 8,
+        }
+    }
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -415,8 +424,12 @@ impl Display<'_> {
 impl fmt::Display for Display<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let separator = match &self.grid.options.filling {
-            Filling::Spaces(n) => " ".repeat(*n),
-            Filling::Tabs(n) => "\t".to_string().repeat(*n),
+            Filling::Spaces(n) if self.grid.options.tab_size <= 0 => " ".to_string().repeat(*n),
+            Filling::Spaces(n) => {
+                let tab_count = n / self.grid.options.tab_size;
+                let remaining_spaces = n % self.grid.options.tab_size;
+                "\t".repeat(tab_count) + &" ".repeat(remaining_spaces)
+            }
             Filling::Text(s) => s.clone(),
         };
 
