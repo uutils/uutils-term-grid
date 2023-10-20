@@ -16,6 +16,7 @@
 //! let mut grid = Grid::new(GridOptions {
 //!     filling: Filling::Spaces(1),
 //!     direction: Direction::LeftToRight,
+//!     tab_size: 8,
 //! });
 //!
 //! for s in &["one", "two", "three", "four", "five", "six", "seven",
@@ -41,7 +42,7 @@
 //! To add data to a grid, first create a new [`Grid`] value, and then add
 //! cells to them with the `add` function.
 //!
-//! There are two options that must be specified in the [`GridOptions`] value
+//! There are three options that must be specified in the [`GridOptions`] value
 //! that dictate how the grid is formatted:
 //!
 //! - `filling`: what to put in between two columns — either a number of
@@ -54,6 +55,8 @@
 //!     - `Direction::TopToBottom` starts them in the top left and moves
 //!        *downwards*, going to the top of a new column after reaching the final
 //!        row.
+//! - `tab_size`: the size of the tab field (default: 8 spaces) that will replace 8
+//!    consecutive spaces with a tab in the separator.
 //!
 //!
 //! ## Displaying a grid
@@ -424,7 +427,7 @@ impl Display<'_> {
 impl fmt::Display for Display<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let separator = match &self.grid.options.filling {
-            Filling::Spaces(n) if self.grid.options.tab_size <= 0 => " ".to_string().repeat(*n),
+            Filling::Spaces(n) if self.grid.options.tab_size == 0 => " ".to_string().repeat(*n),
             Filling::Spaces(n) => {
                 let tab_count = n / self.grid.options.tab_size;
                 let remaining_spaces = n % self.grid.options.tab_size;

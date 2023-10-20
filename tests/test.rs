@@ -368,7 +368,7 @@ nine			      ten			      eleven			      twelve
 
         let display = grid.fit_into_width(50).unwrap();
         assert_eq!(
-r"one           two          three           four
+            r"one           two          three           four
 five          six          seven           eight
 nine          ten          eleven          twelve
 ",
