@@ -8,7 +8,7 @@ fn main() {
     let mut grid = Grid::new(GridOptions {
         direction: Direction::TopToBottom,
         filling: Filling::Text(" | ".into()),
-        ..Default::default()
+        tab_size: 8,
     });
 
     let mut n: u64 = 1234;
