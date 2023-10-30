@@ -5,7 +5,6 @@ fn no_items() {
     let grid = Grid::new(GridOptions {
         direction: Direction::TopToBottom,
         filling: Filling::Spaces(2),
-        tab_size: 8,
     });
 
     let display = grid.fit_into_width(40).unwrap();
@@ -17,7 +16,6 @@ fn one_item() {
     let mut grid = Grid::new(GridOptions {
         direction: Direction::TopToBottom,
         filling: Filling::Spaces(2),
-        tab_size: 8,
     });
 
     grid.add(Cell::from("1"));
@@ -31,7 +29,6 @@ fn one_item_exact_width() {
     let mut grid = Grid::new(GridOptions {
         direction: Direction::TopToBottom,
         filling: Filling::Spaces(2),
-        tab_size: 8,
     });
 
     grid.add(Cell::from("1234567890"));
@@ -45,7 +42,6 @@ fn one_item_just_over() {
     let mut grid = Grid::new(GridOptions {
         direction: Direction::TopToBottom,
         filling: Filling::Spaces(2),
-        tab_size: 8,
     });
 
     grid.add(Cell::from("1234567890!"));
@@ -58,7 +54,6 @@ fn two_small_items() {
     let mut grid = Grid::new(GridOptions {
         direction: Direction::TopToBottom,
         filling: Filling::Spaces(2),
-        tab_size: 8,
     });
 
     grid.add(Cell::from("1"));
@@ -75,7 +70,6 @@ fn two_medium_size_items() {
     let mut grid = Grid::new(GridOptions {
         direction: Direction::TopToBottom,
         filling: Filling::Spaces(2),
-        tab_size: 8,
     });
 
     grid.add(Cell::from("hello there"));
@@ -92,7 +86,6 @@ fn two_big_items() {
     let mut grid = Grid::new(GridOptions {
         direction: Direction::TopToBottom,
         filling: Filling::Spaces(2),
-        tab_size: 8,
     });
 
     grid.add(Cell::from(
@@ -110,7 +103,6 @@ fn that_example_from_earlier() {
     let mut grid = Grid::new(GridOptions {
         filling: Filling::Spaces(1),
         direction: Direction::LeftToRight,
-        tab_size: 8,
     });
 
     for s in &[
@@ -130,7 +122,6 @@ fn number_grid_with_pipe() {
     let mut grid = Grid::new(GridOptions {
         filling: Filling::Text("|".into()),
         direction: Direction::LeftToRight,
-        tab_size: 8,
     });
 
     for s in &[
@@ -150,7 +141,6 @@ fn huge_separator() {
     let mut grid = Grid::new(GridOptions {
         filling: Filling::Spaces(100),
         direction: Direction::LeftToRight,
-        tab_size: 8,
     });
 
     grid.add("a".into());
@@ -164,7 +154,6 @@ fn huge_yet_unused_separator() {
     let mut grid = Grid::new(GridOptions {
         filling: Filling::Spaces(100),
         direction: Direction::LeftToRight,
-        tab_size: 8,
     });
 
     grid.add("abcd".into());
@@ -183,7 +172,6 @@ fn emoji() {
     let mut grid = Grid::new(GridOptions {
         direction: Direction::LeftToRight,
         filling: Filling::Spaces(2),
-        tab_size: 8,
     });
 
     for s in ["🦀", "hello", "👩‍🔬", "hello"] {
@@ -218,7 +206,6 @@ mod uutils_ls {
             let mut grid = Grid::new(GridOptions {
                 direction: Direction::TopToBottom,
                 filling: Filling::Spaces(2),
-                tab_size: 8,
             });
 
             for s in [
@@ -240,7 +227,6 @@ mod uutils_ls {
         let mut grid = Grid::new(GridOptions {
             direction: Direction::LeftToRight,
             filling: Filling::Spaces(2),
-            tab_size: 8,
         });
 
         for s in [
@@ -264,7 +250,6 @@ mod uutils_ls {
         let mut grid = Grid::new(GridOptions {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
-            tab_size: 8,
         });
 
         for s in [
@@ -288,7 +273,6 @@ mod uutils_ls {
         let mut grid = Grid::new(GridOptions {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
-            tab_size: 8,
         });
 
         for s in ["a", "b", "a-long-name", "z"] {
@@ -304,7 +288,6 @@ mod uutils_ls {
         let mut grid = Grid::new(GridOptions {
             filling: Filling::Spaces(10),
             direction: Direction::LeftToRight,
-            tab_size: 8,
         });
 
         for s in &[
@@ -330,7 +313,6 @@ ten  	  eleven	  twelve
         let mut grid = Grid::new(GridOptions {
             filling: Filling::Spaces(30),
             direction: Direction::LeftToRight,
-            tab_size: 8,
         });
 
         for s in &[
@@ -352,11 +334,10 @@ nine			      ten			      eleven			      twelve
     }
 
     #[test]
-    fn zero_tab_size() {
+    fn six_tabs_two_spaces() {
         let mut grid = Grid::new(GridOptions {
-            filling: Filling::Spaces(10),
+            filling: Filling::Spaces(50),
             direction: Direction::LeftToRight,
-            tab_size: 0,
         });
 
         for s in &[
@@ -366,36 +347,12 @@ nine			      ten			      eleven			      twelve
             grid.add(Cell::from(*s));
         }
 
-        let display = grid.fit_into_width(50).unwrap();
+        let display = grid.fit_into_width(250).unwrap();
+
         assert_eq!(
-            r"one           two          three           four
-five          six          seven           eight
-nine          ten          eleven          twelve
-",
-            display.to_string()
-        );
-    }
-
-    #[test]
-    fn negative_tab_size() {
-        let mut grid = Grid::new(GridOptions {
-            filling: Filling::Spaces(10),
-            direction: Direction::LeftToRight,
-            tab_size: -1,
-        });
-
-        for s in &[
-            "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
-            "eleven", "twelve",
-        ] {
-            grid.add(Cell::from(*s));
-        }
-
-        let display = grid.fit_into_width(50).unwrap();
-        assert_eq!(
-            r"one           two          three           four
-five          six          seven           eight
-nine          ten          eleven          twelve
+            r"one 						  two						  three 						  four
+five						  six						  seven 						  eight
+nine						  ten						  eleven						  twelve
 ",
             display.to_string()
         );
