@@ -12,17 +12,20 @@ use term_grid::{Cell, Direction, Filling, Grid, GridOptions};
 // 64 | 8192 | 1048576 | 134217728 | 17179869184 | 2199023255552 |
 
 fn main() {
-    let mut grid = Grid::new(GridOptions {
-        direction: Direction::TopToBottom,
-        filling: Filling::Text(" | ".into()),
-    });
+    let cells: Vec<_> = (0..48)
+        .map(|i| Cell::from(2_isize.pow(i).to_string()))
+        .collect();
 
-    for i in 0..48 {
-        let cell = Cell::from(2_isize.pow(i).to_string());
-        grid.add(cell)
-    }
+    let grid = Grid::new(
+        cells,
+        GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Text(" | ".into()),
+            width: 80,
+        },
+    );
 
-    if let Some(grid_display) = grid.fit_into_width(80) {
+    if let Some(grid_display) = grid {
         println!("{}", grid_display);
     } else {
         println!("Couldn't fit grid into 80 columns!");

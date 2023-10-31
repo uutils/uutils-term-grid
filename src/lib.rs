@@ -13,18 +13,21 @@
 //! ```rust
 //! use term_grid::{Grid, GridOptions, Direction, Filling, Cell};
 //!
-//! let mut grid = Grid::new(GridOptions {
-//!     filling: Filling::Spaces(1),
-//!     direction: Direction::LeftToRight,
-//! });
+//! let cells = vec![
+//!     "one", "two", "three", "four", "five", "six",
+//!     "seven", "eight", "nine", "ten", "eleven", "twelve"
+//! ];
 //!
-//! for s in &["one", "two", "three", "four", "five", "six", "seven",
-//!            "eight", "nine", "ten", "eleven", "twelve"]
-//! {
-//!     grid.add(Cell::from(*s));
-//! }
+//! let grid = Grid::new(
+//!     cells,
+//!     GridOptions {
+//!         filling: Filling::Spaces(1),
+//!         direction: Direction::LeftToRight,
+//!         width: 24,
+//!     }
+//! );
 //!
-//! println!("{}", grid.fit_into_width(24).unwrap());
+//! println!("{}", grid.unwrap());
 //! ```
 //!
 //! Produces the following tabular result:
@@ -34,7 +37,6 @@
 //! five six seven  eight
 //! nine ten eleven twelve
 //! ```
-//!
 //!
 //! ## Creating a grid
 //!
@@ -46,7 +48,7 @@
 //!
 //! - `filling`: what to put in between two columns — either a number of
 //!    spaces, or a text string;
-//! - `direction`, which specifies whether the cells should go along
+//! - `direction`: specifies whether the cells should go along
 //!    rows, or columns:
 //!     - `Direction::LeftToRight` starts them in the top left and
 //!        moves *rightwards*, going to the start of a new row after reaching the
@@ -54,26 +56,8 @@
 //!     - `Direction::TopToBottom` starts them in the top left and moves
 //!        *downwards*, going to the top of a new column after reaching the final
 //!        row.
-//!
-//!
-//! ## Displaying a grid
-//!
-//! When display a grid, you can either specify the number of columns in advance,
-//! or try to find the maximum number of columns that can fit in an area of a
-//! given width.
-//!
-//! Splitting a series of cells into columns — or, in other words, starting a new
-//! row every <var>n</var> cells — is achieved with the [`fit_into_columns`] function
-//! on a `Grid` value. It takes as its argument the number of columns.
-//!
-//! Trying to fit as much data onto one screen as possible is the main use case
-//! for specifying a maximum width instead. This is achieved with the
-//! [`fit_into_width`] function. It takes the maximum allowed width, including
-//! separators, as its argument. However, it returns an *optional* [`Display`]
-//! value, depending on whether any of the cells actually had a width greater than
-//! the maximum width! If this is the case, your best bet is to just output the
-//! cells with one per line.
-//!
+//! - `width`: the width to fill the grid into. Usually, this should be the width
+//!   of the terminal.
 //!
 //! ## Cells and data
 //!
@@ -89,13 +73,6 @@
 //! over terminal control characters. For cases like these, the fields on the
 //! `Cell` values are public, meaning you can construct your own instances as
 //! necessary.
-//!
-//! [`Cell`]: ./struct.Cell.html
-//! [`Display`]: ./struct.Display.html
-//! [`Grid`]: ./struct.Grid.html
-//! [`fit_into_columns`]: ./struct.Grid.html#method.fit_into_columns
-//! [`fit_into_width`]: ./struct.Grid.html#method.fit_into_width
-//! [`GridOptions`]: ./struct.GridOptions.html
 
 use std::fmt;
 use unicode_width::UnicodeWidthStr;
@@ -178,6 +155,9 @@ pub struct GridOptions {
 
     /// The number of spaces to put in between each column of cells.
     pub filling: Filling,
+
+    /// The width to fill with the grid
+    pub width: usize,
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -210,63 +190,28 @@ pub struct Grid {
     options: GridOptions,
     cells: Vec<Cell>,
     widest_cell_length: Width,
-    width_sum: Width,
-    cell_count: usize,
+    dimensions: Dimensions,
 }
 
 impl Grid {
     /// Creates a new grid view with the given options.
-    pub fn new(options: GridOptions) -> Self {
-        let cells = Vec::new();
-        Self {
+    pub fn new<T: Into<Cell>>(cells: Vec<T>, options: GridOptions) -> Option<Self> {
+        let cells: Vec<Cell> = cells.into_iter().map(Into::into).collect();
+        let widest_cell_length = cells.iter().map(|c| c.width).max().unwrap_or(0);
+        let width = options.width;
+
+        let mut grid = Self {
             options,
             cells,
-            widest_cell_length: 0,
-            width_sum: 0,
-            cell_count: 0,
-        }
-    }
+            widest_cell_length,
+            dimensions: Dimensions {
+                num_lines: 0,
+                widths: Vec::new(),
+            },
+        };
 
-    /// Reserves space in the vector for the given number of additional cells
-    /// to be added. (See the `Vec::reserve` function.)
-    pub fn reserve(&mut self, additional: usize) {
-        self.cells.reserve(additional)
-    }
-
-    /// Adds another cell onto the vector.
-    pub fn add(&mut self, cell: Cell) {
-        if cell.width > self.widest_cell_length {
-            self.widest_cell_length = cell.width;
-        }
-        self.width_sum += cell.width;
-        self.cell_count += 1;
-        self.cells.push(cell)
-    }
-
-    /// Returns a displayable grid that’s been packed to fit into the given
-    /// width in the fewest number of rows.
-    ///
-    /// Returns `None` if any of the cells has a width greater than the
-    /// maximum width.
-    pub fn fit_into_width(&self, maximum_width: Width) -> Option<Display<'_>> {
-        self.width_dimensions(maximum_width).map(|dims| Display {
-            grid: self,
-            dimensions: dims,
-        })
-    }
-
-    /// Returns a displayable grid with the given number of columns, and no
-    /// maximum width.
-    pub fn fit_into_columns(&self, num_columns: usize) -> Display<'_> {
-        Display {
-            grid: self,
-            dimensions: self.columns_dimensions(num_columns),
-        }
-    }
-
-    fn columns_dimensions(&self, num_columns: usize) -> Dimensions {
-        let num_lines = div_ceil(self.cells.len(), num_columns);
-        self.column_widths(num_lines, num_columns)
+        grid.dimensions = grid.width_dimensions(width)?;
+        Some(grid)
     }
 
     fn column_widths(&self, num_lines: usize, num_columns: usize) -> Dimensions {
@@ -296,7 +241,7 @@ impl Grid {
             if width + col_total_width_so_far <= maximum_width {
                 col_total_width_so_far += self.options.filling.width() + width;
             } else {
-                return div_ceil(self.cell_count, i);
+                return div_ceil(self.cells.len(), i);
             }
         }
 
@@ -312,14 +257,14 @@ impl Grid {
             return None;
         }
 
-        if self.cell_count == 0 {
+        if self.cells.is_empty() {
             return Some(Dimensions {
                 num_lines: 0,
                 widths: Vec::new(),
             });
         }
 
-        if self.cell_count == 1 {
+        if self.cells.len() == 1 {
             let the_cell = &self.cells[0];
             return Some(Dimensions {
                 num_lines: 1,
@@ -342,7 +287,7 @@ impl Grid {
         for num_lines in (1..=theoretical_max_num_lines).rev() {
             // The number of columns is the number of cells divided by the number
             // of lines, *rounded up*.
-            let num_columns = div_ceil(self.cell_count, num_lines);
+            let num_columns = div_ceil(self.cells.len(), num_lines);
 
             // Early abort: if there are so many columns that the width of the
             // *column separators* is bigger than the width of the screen, then
@@ -370,25 +315,11 @@ impl Grid {
     }
 }
 
-/// A displayable representation of a [`Grid`](struct.Grid.html).
-///
-/// This type implements `Display`, so you can get the textual version
-/// of the grid by calling `.to_string()`.
-#[derive(Debug)]
-pub struct Display<'grid> {
-    /// The grid to display.
-    grid: &'grid Grid,
-
-    /// The pre-computed column widths for this grid.
-    dimensions: Dimensions,
-}
-
-impl Display<'_> {
+impl Grid {
     /// Returns how many columns this display takes up, based on the separator
     /// width and the number and width of the columns.
     pub fn width(&self) -> Width {
-        self.dimensions
-            .total_width(self.grid.options.filling.width())
+        self.dimensions.total_width(self.options.filling.width())
     }
 
     /// Returns how many rows this display takes up.
@@ -408,9 +339,9 @@ impl Display<'_> {
     }
 }
 
-impl fmt::Display for Display<'_> {
+impl fmt::Display for Grid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        let separator = match &self.grid.options.filling {
+        let separator = match &self.options.filling {
             Filling::Spaces(n) => " ".repeat(*n),
             Filling::Text(s) => s.clone(),
         };
@@ -423,21 +354,21 @@ impl fmt::Display for Display<'_> {
         // We overestimate how many spaces we need, but this is not
         // part of the loop and it's therefore not super important to
         // get exactly right.
-        let padding = " ".repeat(self.grid.widest_cell_length);
+        let padding = " ".repeat(self.widest_cell_length);
 
         for y in 0..self.dimensions.num_lines {
             for x in 0..self.dimensions.widths.len() {
-                let num = match self.grid.options.direction {
+                let num = match self.options.direction {
                     Direction::LeftToRight => y * self.dimensions.widths.len() + x,
                     Direction::TopToBottom => y + self.dimensions.num_lines * x,
                 };
 
                 // Abandon a line mid-way through if that’s where the cells end
-                if num >= self.grid.cells.len() {
+                if num >= self.cells.len() {
                     continue;
                 }
 
-                let cell = &self.grid.cells[num];
+                let cell = &self.cells[num];
                 let contents = &cell.contents;
                 let last_in_row = x == self.dimensions.widths.len() - 1;
 
