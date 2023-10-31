@@ -88,7 +88,7 @@ pub struct Cell {
     pub contents: String,
 
     /// The pre-computed length of the string.
-    pub width: Width,
+    pub width: usize,
 }
 
 impl From<String> for Cell {
@@ -121,15 +121,12 @@ pub enum Direction {
     TopToBottom,
 }
 
-/// The width of a cell, in columns.
-pub type Width = usize;
-
 /// The text to put in between each pair of columns.
 /// This does not include any spaces used when aligning cells.
 #[derive(PartialEq, Eq, Debug)]
 pub enum Filling {
     /// A certain number of spaces should be used as the separator.
-    Spaces(Width),
+    Spaces(usize),
 
     /// An arbitrary string.
     /// `"|"` is a common choice.
@@ -137,7 +134,7 @@ pub enum Filling {
 }
 
 impl Filling {
-    fn width(&self) -> Width {
+    fn width(&self) -> usize {
         match *self {
             Filling::Spaces(w) => w,
             Filling::Text(ref t) => UnicodeWidthStr::width(&t[..]),
@@ -163,19 +160,19 @@ pub struct GridOptions {
 #[derive(PartialEq, Eq, Debug)]
 struct Dimensions {
     /// The number of lines in the grid.
-    num_lines: Width,
+    num_lines: usize,
 
     /// The width of each column in the grid. The length of this vector serves
     /// as the number of columns.
-    widths: Vec<Width>,
+    widths: Vec<usize>,
 }
 
 impl Dimensions {
-    fn total_width(&self, separator_width: Width) -> Width {
+    fn total_width(&self, separator_width: usize) -> usize {
         if self.widths.is_empty() {
             0
         } else {
-            let values = self.widths.iter().sum::<Width>();
+            let values = self.widths.iter().sum::<usize>();
             let separators = separator_width * (self.widths.len() - 1);
             values + separators
         }
@@ -189,7 +186,7 @@ impl Dimensions {
 pub struct Grid {
     options: GridOptions,
     cells: Vec<Cell>,
-    widest_cell_length: Width,
+    widest_cell_length: usize,
     dimensions: Dimensions,
 }
 
@@ -251,7 +248,7 @@ impl Grid {
         1
     }
 
-    fn width_dimensions(&self, maximum_width: Width) -> Option<Dimensions> {
+    fn width_dimensions(&self, maximum_width: usize) -> Option<Dimensions> {
         if self.widest_cell_length > maximum_width {
             // Largest cell is wider than maximum width; it is impossible to fit.
             return None;
@@ -304,7 +301,7 @@ impl Grid {
             let adjusted_width = maximum_width - total_separator_width;
 
             let potential_dimensions = self.column_widths(num_lines, num_columns);
-            if potential_dimensions.widths.iter().sum::<Width>() < adjusted_width {
+            if potential_dimensions.widths.iter().sum::<usize>() < adjusted_width {
                 smallest_dimensions_yet = Some(potential_dimensions);
             } else {
                 return smallest_dimensions_yet;
@@ -318,7 +315,7 @@ impl Grid {
 impl Grid {
     /// Returns how many columns this display takes up, based on the separator
     /// width and the number and width of the columns.
-    pub fn width(&self) -> Width {
+    pub fn width(&self) -> usize {
         self.dimensions.total_width(self.options.filling.width())
     }
 
