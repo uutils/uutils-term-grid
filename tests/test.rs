@@ -9,8 +9,7 @@ fn no_items() {
             filling: Filling::Spaces(2),
             width: 40,
         },
-    )
-    .unwrap();
+    );
 
     assert_eq!("", grid.to_string());
 }
@@ -24,8 +23,7 @@ fn one_item() {
             filling: Filling::Spaces(2),
             width: 40,
         },
-    )
-    .unwrap();
+    );
     assert_eq!("1\n", grid.to_string());
 }
 
@@ -38,8 +36,7 @@ fn one_item_exact_width() {
             filling: Filling::Spaces(2),
             width: 10,
         },
-    )
-    .unwrap();
+    );
 
     assert_eq!("1234567890\n", grid.to_string());
 }
@@ -55,7 +52,7 @@ fn one_item_just_over() {
         },
     );
 
-    assert!(grid.is_none());
+    assert_eq!(grid.row_count(), 1);
 }
 
 #[test]
@@ -67,8 +64,7 @@ fn two_small_items() {
             filling: Filling::Spaces(2),
             width: 40,
         },
-    )
-    .unwrap();
+    );
 
     assert_eq!(grid.width(), 1 + 2 + 1);
     assert_eq!("1  2\n", grid.to_string());
@@ -83,8 +79,7 @@ fn two_medium_size_items() {
             filling: Filling::Spaces(2),
             width: 40,
         },
-    )
-    .unwrap();
+    );
 
     assert_eq!(grid.width(), 11 + 2 + 18);
     assert_eq!("hello there  how are you today?\n", grid.to_string());
@@ -104,7 +99,7 @@ fn two_big_items() {
         },
     );
 
-    assert!(grid.is_none());
+    assert_eq!(grid.row_count(), 2);
 }
 
 #[test]
@@ -119,8 +114,7 @@ fn that_example_from_earlier() {
             direction: Direction::LeftToRight,
             width: 24,
         },
-    )
-    .unwrap();
+    );
 
     let bits = "one  two three  four\nfive six seven  eight\nnine ten eleven twelve\n";
     assert_eq!(grid.to_string(), bits);
@@ -139,8 +133,7 @@ fn number_grid_with_pipe() {
             direction: Direction::LeftToRight,
             width: 24,
         },
-    )
-    .unwrap();
+    );
 
     let bits = "one |two|three |four\nfive|six|seven |eight\nnine|ten|eleven|twelve\n";
     assert_eq!(grid.to_string(), bits);
@@ -157,7 +150,7 @@ fn huge_separator() {
             width: 99,
         },
     );
-    assert!(grid.is_none());
+    assert_eq!(grid.row_count(), 2);
 }
 
 #[test]
@@ -169,8 +162,7 @@ fn huge_yet_unused_separator() {
             direction: Direction::LeftToRight,
             width: 99,
         },
-    )
-    .unwrap();
+    );
 
     assert_eq!(grid.width(), 4);
     assert_eq!("abcd\n", grid.to_string());
@@ -188,8 +180,7 @@ fn emoji() {
             filling: Filling::Spaces(2),
             width: 12,
         },
-    )
-    .unwrap();
+    );
     assert_eq!("🦀    hello\n👩‍🔬  hello\n", grid.to_string());
 }
 
@@ -226,8 +217,7 @@ mod uutils_ls {
                     filling: Filling::Spaces(2),
                     width,
                 },
-            )
-            .unwrap();
+            );
             assert_eq!(expected, grid.to_string());
         }
     }
@@ -246,8 +236,7 @@ mod uutils_ls {
                 filling: Filling::Spaces(2),
                 width: 30,
             },
-        )
-        .unwrap();
+        );
 
         assert_eq!(
             "test-across1  test-across2\ntest-across3  test-across4\n",
@@ -269,8 +258,7 @@ mod uutils_ls {
                 filling: Filling::Spaces(2),
                 width: 30,
             },
-        )
-        .unwrap();
+        );
 
         assert_eq!(
             "test-columns1  test-columns3\ntest-columns2  test-columns4\n",
@@ -287,8 +275,7 @@ mod uutils_ls {
                 filling: Filling::Spaces(2),
                 width: 15,
             },
-        )
-        .unwrap();
+        );
 
         assert_eq!("a  a-long-name\nb  z\n", grid.to_string());
     }

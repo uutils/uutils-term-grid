@@ -22,10 +22,6 @@ fn main() {
             },
         );
 
-        if let Some(grid_display) = grid {
-            println!("{}", grid_display);
-        } else {
-            println!("Couldn't fit grid into 80 columns!");
-        }
+        println!("{}", grid);
     }
 }

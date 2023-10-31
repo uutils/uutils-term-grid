@@ -27,7 +27,7 @@
 //!     }
 //! );
 //!
-//! println!("{}", grid.unwrap());
+//! println!("{grid}");
 //! ```
 //!
 //! Produces the following tabular result:
@@ -192,7 +192,7 @@ pub struct Grid {
 
 impl Grid {
     /// Creates a new grid view with the given options.
-    pub fn new<T: Into<Cell>>(cells: Vec<T>, options: GridOptions) -> Option<Self> {
+    pub fn new<T: Into<Cell>>(cells: Vec<T>, options: GridOptions) -> Self {
         let cells: Vec<Cell> = cells.into_iter().map(Into::into).collect();
         let widest_cell_length = cells.iter().map(|c| c.width).max().unwrap_or(0);
         let width = options.width;
@@ -207,8 +207,12 @@ impl Grid {
             },
         };
 
-        grid.dimensions = grid.width_dimensions(width)?;
-        Some(grid)
+        grid.dimensions = grid.width_dimensions(width).unwrap_or(Dimensions {
+            num_lines: grid.cells.len(),
+            widths: grid.cells.iter().map(|c| c.width).collect(),
+        });
+
+        grid
     }
 
     fn column_widths(&self, num_lines: usize, num_columns: usize) -> Dimensions {
