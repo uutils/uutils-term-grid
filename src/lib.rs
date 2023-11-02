@@ -125,7 +125,7 @@ impl Dimensions {
 pub struct Grid {
     options: GridOptions,
     cells: Vec<Cell>,
-    widest_cell_length: usize,
+    widest_cell_width: usize,
     dimensions: Dimensions,
 }
 
@@ -134,13 +134,13 @@ impl Grid {
     /// Creates a new grid view with the given cells and options
     pub fn new<T: Into<Cell>>(cells: Vec<T>, options: GridOptions) -> Self {
         let cells: Vec<Cell> = cells.into_iter().map(Into::into).collect();
-        let widest_cell_length = cells.iter().map(|c| c.width).max().unwrap_or(0);
+        let widest_cell_width = cells.iter().map(|c| c.width).max().unwrap_or(0);
         let width = options.width;
 
         let mut grid = Self {
             options,
             cells,
-            widest_cell_length,
+            widest_cell_width,
             dimensions: Dimensions {
                 num_lines: 0,
                 widths: Vec::new(),
@@ -215,7 +215,7 @@ impl Grid {
     }
 
     fn width_dimensions(&self, maximum_width: usize) -> Option<Dimensions> {
-        if self.widest_cell_length > maximum_width {
+        if self.widest_cell_width > maximum_width {
             // Largest cell is wider than maximum width; it is impossible to fit.
             return None;
         }
@@ -293,7 +293,7 @@ impl fmt::Display for Grid {
         // We overestimate how many spaces we need, but this is not
         // part of the loop and it's therefore not super important to
         // get exactly right.
-        let padding = " ".repeat(self.widest_cell_length);
+        let padding = " ".repeat(self.widest_cell_width);
 
         for y in 0..self.dimensions.num_lines {
             for x in 0..self.dimensions.widths.len() {
