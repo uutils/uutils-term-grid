@@ -2,14 +2,14 @@
 // file that was distributed with this source code.
 
 extern crate term_grid;
-use term_grid::{Cell, Direction, Filling, Grid, GridOptions};
+use term_grid::{Direction, Filling, Grid, GridOptions};
 
 fn main() {
     let mut n: u64 = 1234;
     for _ in 0..50 {
         let mut cells = Vec::new();
         for _ in 0..10000 {
-            cells.push(Cell::from(n.to_string()));
+            cells.push(n.to_string());
             n = n.overflowing_pow(2).0 % 100000000;
         }
 
@@ -22,6 +22,6 @@ fn main() {
             },
         );
 
-        println!("{}", grid);
+        println!("{grid}");
     }
 }

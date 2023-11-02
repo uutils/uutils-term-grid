@@ -8,47 +8,7 @@
 #![doc = include_str!("../README.md")]
 
 use std::fmt;
-use unicode_width::UnicodeWidthStr;
-
-/// A string and its pre-computed width
-///
-/// There are two ways to construct a [`Cell`]. First, you can call
-/// [`Cell::from`] with a `String` or a `&str` (and similarly call `.into()`
-/// on those same types). The width will then be the _unicode width_, which
-/// will deal with emoji and other wide characters correctly, instead of
-/// assuming that each code point corresponds to a single column. See the
-/// [`unicode-width`](https://docs.rs/unicode-width/latest/unicode_width/)
-/// crate for more information.
-///
-/// Second, a [`Cell`] can be constructed directly with an explicit width.
-/// This is useful for cases where the displayed width is not just determined
-/// by unicode. For example, if cells contain ANSI codes.
-#[derive(PartialEq, Eq, Debug, Clone)]
-pub struct Cell {
-    /// The string to display when this cell gets rendered.
-    pub contents: String,
-
-    /// The pre-computed length of the string.
-    pub width: usize,
-}
-
-impl From<String> for Cell {
-    fn from(string: String) -> Self {
-        Self {
-            width: UnicodeWidthStr::width(&*string),
-            contents: string,
-        }
-    }
-}
-
-impl<'a> From<&'a str> for Cell {
-    fn from(string: &'a str) -> Self {
-        Self {
-            width: UnicodeWidthStr::width(string),
-            contents: string.into(),
-        }
-    }
-}
+use textwrap::core::display_width;
 
 /// Direction cells should be written in: either across or downwards.
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
@@ -78,9 +38,9 @@ pub enum Filling {
 
 impl Filling {
     fn width(&self) -> usize {
-        match *self {
-            Filling::Spaces(w) => w,
-            Filling::Text(ref t) => UnicodeWidthStr::width(&t[..]),
+        match self {
+            Filling::Spaces(w) => *w,
+            Filling::Text(t) => display_width(t),
         }
     }
 }
@@ -122,24 +82,26 @@ impl Dimensions {
 
 /// Everything needed to format the cells with the grid options.
 #[derive(Debug)]
-pub struct Grid {
+pub struct Grid<T: AsRef<str>> {
     options: GridOptions,
-    cells: Vec<Cell>,
+    cells: Vec<T>,
+    widths: Vec<usize>,
     widest_cell_width: usize,
     dimensions: Dimensions,
 }
 
 // Public methods
-impl Grid {
+impl<T: AsRef<str>> Grid<T> {
     /// Creates a new grid view with the given cells and options
-    pub fn new<T: Into<Cell>>(cells: Vec<T>, options: GridOptions) -> Self {
-        let cells: Vec<Cell> = cells.into_iter().map(Into::into).collect();
-        let widest_cell_width = cells.iter().map(|c| c.width).max().unwrap_or(0);
+    pub fn new(cells: Vec<T>, options: GridOptions) -> Self {
+        let widths: Vec<usize> = cells.iter().map(|c| display_width(c.as_ref())).collect();
+        let widest_cell_width = widths.iter().copied().max().unwrap_or(0);
         let width = options.width;
 
         let mut grid = Self {
             options,
             cells,
+            widths,
             widest_cell_width,
             dimensions: Dimensions {
                 num_lines: 0,
@@ -149,7 +111,7 @@ impl Grid {
 
         grid.dimensions = grid.width_dimensions(width).unwrap_or(Dimensions {
             num_lines: grid.cells.len(),
-            widths: grid.cells.iter().map(|c| c.width).collect(),
+            widths: grid.widths.clone(),
         });
 
         grid
@@ -178,23 +140,26 @@ impl Grid {
     }
 
     fn column_widths(&self, num_lines: usize, num_columns: usize) -> Dimensions {
-        let mut widths = vec![0; num_columns];
-        for (index, cell) in self.cells.iter().enumerate() {
+        let mut column_widths = vec![0; num_columns];
+        for (index, cell_width) in self.widths.iter().copied().enumerate() {
             let index = match self.options.direction {
                 Direction::LeftToRight => index % num_columns,
                 Direction::TopToBottom => index / num_lines,
             };
-            if cell.width > widths[index] {
-                widths[index] = cell.width;
+            if cell_width > column_widths[index] {
+                column_widths[index] = cell_width;
             }
         }
 
-        Dimensions { num_lines, widths }
+        Dimensions {
+            num_lines,
+            widths: column_widths,
+        }
     }
 
     fn theoretical_max_num_lines(&self, maximum_width: usize) -> usize {
         // TODO: Make code readable / efficient.
-        let mut widths: Vec<_> = self.cells.iter().map(|c| c.width).collect();
+        let mut widths = self.widths.clone();
 
         // Sort widths in reverse order
         widths.sort_unstable_by(|a, b| b.cmp(a));
@@ -228,20 +193,20 @@ impl Grid {
         }
 
         if self.cells.len() == 1 {
-            let the_cell = &self.cells[0];
+            let cell_widths = self.widths[0];
             return Some(Dimensions {
                 num_lines: 1,
-                widths: vec![the_cell.width],
+                widths: vec![cell_widths],
             });
         }
 
         let theoretical_max_num_lines = self.theoretical_max_num_lines(maximum_width);
         if theoretical_max_num_lines == 1 {
-            // This if—statement is neccesary for the function to work correctly
+            // This if—statement is necessary for the function to work correctly
             // for small inputs.
             return Some(Dimensions {
                 num_lines: 1,
-                widths: self.cells.iter().map(|cell| cell.width).collect(),
+                widths: self.widths.clone(),
             });
         }
         // Instead of numbers of columns, try to find the fewest number of *lines*
@@ -278,7 +243,7 @@ impl Grid {
     }
 }
 
-impl fmt::Display for Grid {
+impl<T: AsRef<str>> fmt::Display for Grid<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let separator = match &self.options.filling {
             Filling::Spaces(n) => " ".repeat(*n),
@@ -307,12 +272,12 @@ impl fmt::Display for Grid {
                     continue;
                 }
 
-                let cell = &self.cells[num];
-                let contents = &cell.contents;
+                let contents = &self.cells[num];
+                let width = self.widths[num];
                 let last_in_row = x == self.dimensions.widths.len() - 1;
 
                 let col_width = self.dimensions.widths[x];
-                let padding_size = col_width - cell.width;
+                let padding_size = col_width - width;
 
                 // The final column doesn’t need to have trailing spaces,
                 // as long as it’s left-aligned.
@@ -327,7 +292,7 @@ impl fmt::Display for Grid {
                 // above, so we don't need to call `" ".repeat(n)` each loop.
                 // We also only call `write_str` when we actually need padding as
                 // another optimization.
-                f.write_str(contents)?;
+                f.write_str(contents.as_ref())?;
                 if !last_in_row {
                     if padding_size > 0 {
                         f.write_str(&padding[0..padding_size])?;

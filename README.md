@@ -28,7 +28,7 @@ fixed-width fonts, using an algorithm to minimise the amount of space
 needed. For example:
 
 ```rust
-use term_grid::{Grid, GridOptions, Direction, Filling, Cell};
+use term_grid::{Grid, GridOptions, Direction, Filling};
 
 let cells = vec![
     "one", "two", "three", "four", "five", "six",

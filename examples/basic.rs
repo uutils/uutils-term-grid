@@ -1,5 +1,5 @@
 extern crate term_grid;
-use term_grid::{Cell, Direction, Filling, Grid, GridOptions};
+use term_grid::{Direction, Filling, Grid, GridOptions};
 
 // This produces:
 //
@@ -12,9 +12,7 @@ use term_grid::{Cell, Direction, Filling, Grid, GridOptions};
 // 64 | 8192 | 1048576 | 134217728 | 17179869184 | 2199023255552 |
 
 fn main() {
-    let cells: Vec<_> = (0..48)
-        .map(|i| Cell::from(2_isize.pow(i).to_string()))
-        .collect();
+    let cells: Vec<_> = (0..48).map(|i| 2_isize.pow(i).to_string()).collect();
 
     let grid = Grid::new(
         cells,
