@@ -5,83 +5,24 @@
 #![warn(trivial_casts, trivial_numeric_casts)]
 #![warn(unused)]
 #![deny(unsafe_code)]
-
-//! This library arranges textual data in a grid format suitable for
-//! fixed-width fonts, using an algorithm to minimise the amount of space
-//! needed. For example:
-//!
-//! ```rust
-//! use term_grid::{Grid, GridOptions, Direction, Filling, Cell};
-//!
-//! let cells = vec![
-//!     "one", "two", "three", "four", "five", "six",
-//!     "seven", "eight", "nine", "ten", "eleven", "twelve"
-//! ];
-//!
-//! let grid = Grid::new(
-//!     cells,
-//!     GridOptions {
-//!         filling: Filling::Spaces(1),
-//!         direction: Direction::LeftToRight,
-//!         width: 24,
-//!     }
-//! );
-//!
-//! println!("{grid}");
-//! ```
-//!
-//! Produces the following tabular result:
-//!
-//! ```text
-//! one  two three  four
-//! five six seven  eight
-//! nine ten eleven twelve
-//! ```
-//!
-//! ## Creating a grid
-//!
-//! To add data to a grid, first create a new [`Grid`] value, and then add
-//! cells to them with the `add` function.
-//!
-//! There are two options that must be specified in the [`GridOptions`] value
-//! that dictate how the grid is formatted:
-//!
-//! - `filling`: what to put in between two columns — either a number of
-//!    spaces, or a text string;
-//! - `direction`: specifies whether the cells should go along
-//!    rows, or columns:
-//!     - `Direction::LeftToRight` starts them in the top left and
-//!        moves *rightwards*, going to the start of a new row after reaching the
-//!        final column;
-//!     - `Direction::TopToBottom` starts them in the top left and moves
-//!        *downwards*, going to the top of a new column after reaching the final
-//!        row.
-//! - `width`: the width to fill the grid into. Usually, this should be the width
-//!   of the terminal.
-//!
-//! ## Cells and data
-//!
-//! Grids to not take `String`s or `&str`s — they take [`Cell`] values.
-//!
-//! A **Cell** is a struct containing an individual cell’s contents, as a string,
-//! and its pre-computed length, which gets used when calculating a grid’s final
-//! dimensions. Usually, you want the *Unicode width* of the string to be used for
-//! this, so you can turn a `String` into a `Cell` with the `.into()` function.
-//!
-//! However, you may also want to supply your own width: when you already know the
-//! width in advance, or when you want to change the measurement, such as skipping
-//! over terminal control characters. For cases like these, the fields on the
-//! `Cell` values are public, meaning you can construct your own instances as
-//! necessary.
+#![doc = include_str!("../README.md")]
 
 use std::fmt;
 use unicode_width::UnicodeWidthStr;
 
-/// A **Cell** is the combination of a string and its pre-computed length.
+/// A string and its pre-computed width
 ///
-/// The easiest way to create a Cell is just by using `string.into()`, which
-/// uses the **unicode width** of the string (see the `unicode_width` crate).
-/// However, the fields are public, if you wish to provide your own length.
+/// There are two ways to construct a [`Cell`]. First, you can call
+/// [`Cell::from`] with a `String` or a `&str` (and similarly call `.into()`
+/// on those same types). The width will then be the _unicode width_, which
+/// will deal with emoji and other wide characters correctly, instead of
+/// assuming that each code point corresponds to a single column. See the
+/// [`unicode-width`](https://docs.rs/unicode-width/latest/unicode_width/)
+/// crate for more information.
+///
+/// Second, a [`Cell`] can be constructed directly with an explicit width.
+/// This is useful for cases where the displayed width is not just determined
+/// by unicode. For example, if cells contain ANSI codes.
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub struct Cell {
     /// The string to display when this cell gets rendered.
@@ -109,7 +50,7 @@ impl<'a> From<&'a str> for Cell {
     }
 }
 
-/// Direction cells should be written in — either across, or downwards.
+/// Direction cells should be written in: either across or downwards.
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub enum Direction {
     /// Starts at the top left and moves rightwards, going back to the first
@@ -122,13 +63,15 @@ pub enum Direction {
 }
 
 /// The text to put in between each pair of columns.
+///
 /// This does not include any spaces used when aligning cells.
 #[derive(PartialEq, Eq, Debug)]
 pub enum Filling {
-    /// A certain number of spaces should be used as the separator.
+    /// A number of spaces
     Spaces(usize),
 
-    /// An arbitrary string.
+    /// An arbitrary string
+    ///
     /// `"|"` is a common choice.
     Text(String),
 }
@@ -142,15 +85,13 @@ impl Filling {
     }
 }
 
-/// The user-assignable options for a grid view that should be passed to
-/// [`Grid::new()`](struct.Grid.html#method.new).
+/// The options for a grid view that should be passed to [`Grid::new`]
 #[derive(Debug)]
 pub struct GridOptions {
-    /// The direction that the cells should be written in — either
-    /// across, or downwards.
+    /// The direction that the cells should be written in
     pub direction: Direction,
 
-    /// The number of spaces to put in between each column of cells.
+    /// The string to put in between each column of cells
     pub filling: Filling,
 
     /// The width to fill with the grid
@@ -180,8 +121,6 @@ impl Dimensions {
 }
 
 /// Everything needed to format the cells with the grid options.
-///
-/// For more information, see the [`term_grid` crate documentation](index.html).
 #[derive(Debug)]
 pub struct Grid {
     options: GridOptions,
@@ -190,8 +129,9 @@ pub struct Grid {
     dimensions: Dimensions,
 }
 
+// Public methods
 impl Grid {
-    /// Creates a new grid view with the given options.
+    /// Creates a new grid view with the given cells and options
     pub fn new<T: Into<Cell>>(cells: Vec<T>, options: GridOptions) -> Self {
         let cells: Vec<Cell> = cells.into_iter().map(Into::into).collect();
         let widest_cell_length = cells.iter().map(|c| c.width).max().unwrap_or(0);
@@ -213,6 +153,28 @@ impl Grid {
         });
 
         grid
+    }
+
+    /// The number of terminal columns this display takes up, based on the separator
+    /// width and the number and width of the columns.
+    pub fn width(&self) -> usize {
+        self.dimensions.total_width(self.options.filling.width())
+    }
+
+    /// The number of rows this display takes up.
+    pub fn row_count(&self) -> usize {
+        self.dimensions.num_lines
+    }
+
+    /// Returns whether this display takes up as many columns as were allotted
+    /// to it.
+    ///
+    /// It’s possible to construct tables that don’t actually use up all the
+    /// columns that they could, such as when there are more columns than
+    /// cells! In this case, a column would have a width of zero. This just
+    /// checks for that.
+    pub fn is_complete(&self) -> bool {
+        self.dimensions.widths.iter().all(|&x| x > 0)
     }
 
     fn column_widths(&self, num_lines: usize, num_columns: usize) -> Dimensions {
@@ -316,30 +278,6 @@ impl Grid {
     }
 }
 
-impl Grid {
-    /// Returns how many columns this display takes up, based on the separator
-    /// width and the number and width of the columns.
-    pub fn width(&self) -> usize {
-        self.dimensions.total_width(self.options.filling.width())
-    }
-
-    /// Returns how many rows this display takes up.
-    pub fn row_count(&self) -> usize {
-        self.dimensions.num_lines
-    }
-
-    /// Returns whether this display takes up as many columns as were allotted
-    /// to it.
-    ///
-    /// It’s possible to construct tables that don’t actually use up all the
-    /// columns that they could, such as when there are more columns than
-    /// cells! In this case, a column would have a width of zero. This just
-    /// checks for that.
-    pub fn is_complete(&self) -> bool {
-        self.dimensions.widths.iter().all(|&x| x > 0)
-    }
-}
-
 impl fmt::Display for Grid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let separator = match &self.options.filling {
@@ -406,7 +344,8 @@ impl fmt::Display for Grid {
 
 // Adapted from the unstable API:
 // https://doc.rust-lang.org/std/primitive.usize.html#method.div_ceil
-/// Division with upward rouding
+// Can be removed on MSRV 1.70.
+/// Division with upward rounding
 pub const fn div_ceil(lhs: usize, rhs: usize) -> usize {
     let d = lhs / rhs;
     let r = lhs % rhs;
