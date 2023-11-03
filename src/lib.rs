@@ -114,7 +114,7 @@ impl<T: AsRef<str>> Grid<T> {
 
         grid.dimensions = grid.width_dimensions(width).unwrap_or(Dimensions {
             num_lines: grid.cells.len(),
-            widths: grid.widths.clone(),
+            widths: vec![widest_cell_width],
         });
 
         grid

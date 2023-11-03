@@ -1,6 +1,8 @@
 // For the full copyright and license information, please view the LICENSE
 // file that was distributed with this source code.
 
+// spell-checker:ignore underflowed
+
 use term_grid::{Direction, Filling, Grid, GridOptions};
 
 #[test]
@@ -185,6 +187,24 @@ fn emoji() {
         },
     );
     assert_eq!("🦀    hello\n👩‍🔬  hello\n", grid.to_string());
+}
+
+// This test once underflowed, which should never happen. The test is just
+// checking that we do not get a panic.
+#[test]
+fn possible_underflow() {
+    let cells: Vec<_> = (0..48).map(|i| 2_isize.pow(i).to_string()).collect();
+
+    let grid = Grid::new(
+        cells,
+        GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Text(" | ".into()),
+            width: 15,
+        },
+    );
+
+    println!("{}", grid);
 }
 
 // These test are based on the tests in uutils ls, to ensure we won't break
