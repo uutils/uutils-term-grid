@@ -312,7 +312,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
 
 // Adapted from the unstable API:
 // https://doc.rust-lang.org/std/primitive.usize.html#method.div_ceil
-// Can be removed on MSRV 1.70.
+// Can be removed on MSRV 1.73.
 /// Division with upward rounding
 pub const fn div_ceil(lhs: usize, rhs: usize) -> usize {
     let d = lhs / rhs;
