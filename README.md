@@ -28,8 +28,28 @@ uutils_term_grid = "0.3"
 
 The Minimum Supported Rust Version is 1.70.
 
-This library arranges textual data in a grid format suitable for fixed-width
-fonts, using an algorithm to minimise the amount of space needed. For example:
+## Creating a grid
+
+To add data to a grid, first create a new [`Grid`] value with a list of strings
+and a set of options.
+
+There are three options that must be specified in the [`GridOptions`] value that
+dictate how the grid is formatted:
+
+- [`filling`][filling]: what to put in between two columns — either a number of
+  spaces, or a text string;
+- [`direction`][direction]: specifies whether the cells should go along rows, or
+  columns:
+  - [`Direction::LeftToRight`][LeftToRight] starts them in the top left and
+    moves _rightwards_, going to the start of a new row after reaching the final
+    column;
+  - [`Direction::TopToBottom`][TopToBottom] starts them in the top left and
+    moves _downwards_, going to the top of a new column after reaching the final
+    row.
+- [`width`][width]: the width to fill the grid into. Usually, this should be the
+  width of the terminal.
+
+In practice, creating a grid can be done as follows:
 
 ```rust
 use term_grid::{Grid, GridOptions, Direction, Filling};
@@ -68,27 +88,6 @@ one  two three  four
 five six seven  eight
 nine ten eleven twelve
 ```
-
-## Creating a grid
-
-To add data to a grid, first create a new [`Grid`] value with a list of strings
-and a set of options.
-
-There are three options that must be specified in the [`GridOptions`] value that
-dictate how the grid is formatted:
-
-- [`filling`][filling]: what to put in between two columns — either a number of
-  spaces, or a text string;
-- [`direction`][direction]: specifies whether the cells should go along rows, or
-  columns:
-  - [`Direction::LeftToRight`][LeftToRight] starts them in the top left and
-    moves _rightwards_, going to the start of a new row after reaching the final
-    column;
-  - [`Direction::TopToBottom`][TopToBottom] starts them in the top left and
-    moves _downwards_, going to the top of a new column after reaching the final
-    row.
-- [`width`][width]: the width to fill the grid into. Usually, this should be the
-  width of the terminal.
 
 [filling]: struct.GridOptions.html#structfield.filling
 [direction]: struct.GridOptions.html#structfield.direction

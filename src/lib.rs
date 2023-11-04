@@ -93,7 +93,6 @@ pub struct Grid<T: AsRef<str>> {
     dimensions: Dimensions,
 }
 
-// Public methods
 impl<T: AsRef<str>> Grid<T> {
     /// Creates a new grid view with the given cells and options
     pub fn new(cells: Vec<T>, options: GridOptions) -> Self {
