@@ -1,5 +1,7 @@
-extern crate term_grid;
-use term_grid::{Cell, Direction, Filling, Grid, GridOptions};
+// For the full copyright and license information, please view the LICENSE
+// file that was distributed with this source code.
+
+use term_grid::{Direction, Filling, Grid, GridOptions};
 
 // This produces:
 //
@@ -12,19 +14,16 @@ use term_grid::{Cell, Direction, Filling, Grid, GridOptions};
 // 64 | 8192 | 1048576 | 134217728 | 17179869184 | 2199023255552 |
 
 fn main() {
-    let mut grid = Grid::new(GridOptions {
-        direction: Direction::TopToBottom,
-        filling: Filling::Text(" | ".into()),
-    });
+    let cells: Vec<_> = (0..48).map(|i| 2_isize.pow(i).to_string()).collect();
 
-    for i in 0..48 {
-        let cell = Cell::from(2_isize.pow(i).to_string());
-        grid.add(cell)
-    }
+    let grid = Grid::new(
+        cells,
+        GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Text(" | ".into()),
+            width: 80,
+        },
+    );
 
-    if let Some(grid_display) = grid.fit_into_width(80) {
-        println!("{}", grid_display);
-    } else {
-        println!("Couldn't fit grid into 80 columns!");
-    }
+    println!("{}", grid);
 }

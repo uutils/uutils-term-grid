@@ -2,20 +2,24 @@
 [![dependency status](https://deps.rs/repo/github/uutils/uutils-term-grid/status.svg)](https://deps.rs/repo/github/uutils/uutils-term-grid)
 [![CodeCov](https://codecov.io/gh/uutils/uutils-term-grid/branch/master/graph/badge.svg)](https://codecov.io/gh/uutils/uutils-term-grid)
 
-
 # uutils-term-grid
 
-This library arranges textual data in a grid format suitable for fixed-width fonts, using an algorithm to minimise the amount of space needed.
+This library arranges textual data in a grid format suitable for fixed-width
+fonts, using an algorithm to minimise the amount of space needed.
 
 ---
 
-This library is forked from the [`rust-term-grid`](https://github.com/ogham/rust-term-grid) library.
+This library is forked from the unmaintained
+[`rust-term-grid`](https://github.com/ogham/rust-term-grid) library. The core
+functionality has remained the same, with some additional bugfixes, performance
+improvements and a new API.
 
 ---
 
 # Installation
 
-This crate works with `cargo`. Add the following to your `Cargo.toml` dependencies section:
+This crate works with `cargo`. Add the following to your `Cargo.toml`
+dependencies section:
 
 ```toml
 [dependencies]
@@ -24,70 +28,81 @@ uutils_term_grid = "0.3"
 
 The Minimum Supported Rust Version is 1.70.
 
+## Creating a grid
 
-## Usage
+To add data to a grid, first create a new [`Grid`] value with a list of strings
+and a set of options.
 
-This library arranges textual data in a grid format suitable for fixed-width fonts, using an algorithm to minimise the amount of space needed.
-For example:
+There are three options that must be specified in the [`GridOptions`] value that
+dictate how the grid is formatted:
+
+- [`filling`][filling]: what to put in between two columns — either a number of
+  spaces, or a text string;
+- [`direction`][direction]: specifies whether the cells should go along rows, or
+  columns:
+  - [`Direction::LeftToRight`][LeftToRight] starts them in the top left and
+    moves _rightwards_, going to the start of a new row after reaching the final
+    column;
+  - [`Direction::TopToBottom`][TopToBottom] starts them in the top left and
+    moves _downwards_, going to the top of a new column after reaching the final
+    row.
+- [`width`][width]: the width to fill the grid into. Usually, this should be the
+  width of the terminal.
+
+In practice, creating a grid can be done as follows:
 
 ```rust
-use term_grid::{Grid, GridOptions, Direction, Filling, Cell};
+use term_grid::{Grid, GridOptions, Direction, Filling};
 
-let mut grid = Grid::new(GridOptions {
-    filling:     Filling::Spaces(1),
-    direction:   Direction::LeftToRight,
-});
+// Create a `Vec` of text to put in the grid
+let cells = vec![
+    "one", "two", "three", "four", "five", "six",
+    "seven", "eight", "nine", "ten", "eleven", "twelve"
+];
 
-for s in &["one", "two", "three", "four", "five", "six", "seven",
-           "eight", "nine", "ten", "eleven", "twelve"]
-{
-    grid.add(Cell::from(*s));
-}
+// Then create a `Grid` with those cells.
+// The grid requires several options:
+//  - The filling determines the string used as separator
+//    between the columns.
+//  - The direction specifies whether the layout should
+//    be done row-wise or column-wise.
+//  - The width is the maximum width that the grid might
+//    have.
+let grid = Grid::new(
+    cells,
+    GridOptions {
+        filling: Filling::Spaces(1),
+        direction: Direction::LeftToRight,
+        width: 24,
+    }
+);
 
-println!("{}", grid.fit_into_width(24).unwrap());
+// A `Grid` implements `Display` and can be printed directly.
+println!("{grid}");
 ```
 
 Produces the following tabular result:
 
-```
+```text
 one  two three  four
 five six seven  eight
 nine ten eleven twelve
 ```
 
+[filling]: struct.GridOptions.html#structfield.filling
+[direction]: struct.GridOptions.html#structfield.direction
+[width]: struct.GridOptions.html#structfield.width
+[LeftToRight]: enum.Direction.html#variant.LeftToRight
+[TopToBottom]: enum.Direction.html#variant.TopToBottom
 
-## Creating a grid
+## Width of grid cells
 
-To add data to a grid, first create a new `Grid` value, and then add cells to them with the `add` method.
+This library calculates the width of strings as displayed in the terminal using
+the [`textwrap`][textwrap] library (with the [`display_width`][display_width] function).
+This takes into account the width of characters and ignores ANSI codes.
 
-There are two options that must be specified in the `GridOptions` value that dictate how the grid is formatted:
+The width calculation is currently not configurable. If you have a use-case for
+which this calculation is wrong, please open an issue.
 
-- `filling`: what to put in between two columns - either a number of spaces, or a text string;
-- `direction`, which specifies whether the cells should go along rows, or columns:
-    - `Direction::LeftToRight` starts them in the top left and moves *rightwards*, going to the start of a new row after reaching the final column;
-    - `Direction::TopToBottom` starts them in the top left and moves *downwards*, going to the top of a new column after reaching the final row.
-
-
-## Displaying a grid
-
-When display a grid, you can either specify the number of columns in advance, or try to find the maximum number of columns that can fit in an area of a given width.
-
-Splitting a series of cells into columns - or, in other words, starting a new row every *n* cells - is achieved with the `fit_into_columns` method on a `Grid` value.
-It takes as its argument the number of columns.
-
-Trying to fit as much data onto one screen as possible is the main use case for specifying a maximum width instead.
-This is achieved with the `fit_into_width` method.
-It takes the maximum allowed width, including separators, as its argument.
-However, it returns an *optional* `Display` value, depending on whether any of the cells actually had a width greater than the maximum width!
-If this is the case, your best bet is to just output the cells with one per line.
-
-
-## Cells and data
-
-Grids do not take `String`s or `&str`s - they take `Cells`.
-
-A **Cell** is a struct containing an individual cell’s contents, as a string, and its pre-computed length, which gets used when calculating a grid’s final dimensions.
-Usually, you want the *Unicode width* of the string to be used for this, so you can turn a `String` into a `Cell` with the `.into()` method.
-
-However, you may also want to supply your own width: when you already know the width in advance, or when you want to change the measurement, such as skipping over terminal control characters.
-For cases like these, the fields on the `Cell` values are public, meaning you can construct your own instances as necessary.
+[textwrap]: https://docs.rs/textwrap/latest/textwrap/index.html
+[display_width]: https://docs.rs/textwrap/latest/textwrap/core/fn.display_width.html
