@@ -20,10 +20,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all-features --workspace
+      - run: cargo test --all-features --workspace
 
   rustfmt:
     name: Rustfmt
@@ -37,10 +34,7 @@ jobs:
           components: rustfmt
       - uses: Swatinem/rust-cache@v2
       - name: Check formatting
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all -- --check
 
   clippy:
     name: Clippy
@@ -54,10 +48,7 @@ jobs:
           components: clippy
       - uses: Swatinem/rust-cache@v2
       - name: Clippy check
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --all-targets --all-features --workspace -- -D warnings
+        run: cargo clippy --all-targets --all-features --workspace -- -D warnings
 
   docs:
     name: Docs
@@ -71,9 +62,7 @@ jobs:
       - name: Check documentation
         env:
           RUSTDOCFLAGS: -D warnings
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
+        run: cargo doc
 
   coverage:
     name: Code Coverage
@@ -110,10 +99,7 @@ jobs:
     - name: rust toolchain ~ install
       uses: dtolnay/rust-toolchain@nightly
     - name: Test
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: ${{ steps.vars.outputs.CARGO_FEATURES_OPTION }} --no-fail-fast
+      run: cargo test ${{ steps.vars.outputs.CARGO_FEATURES_OPTION }} --no-fail-fast
       env:
         CARGO_INCREMENTAL: "0"
         RUSTC_WRAPPER: ""
