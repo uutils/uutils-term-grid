@@ -18,16 +18,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
+        uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all-features --workspace
+      - run: cargo test --all-features --workspace
 
   rustfmt:
     name: Rustfmt
@@ -36,18 +29,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          profile: minimal
-          override: true
           components: rustfmt
       - uses: Swatinem/rust-cache@v2
       - name: Check formatting
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all -- --check
 
   clippy:
     name: Clippy
@@ -56,18 +43,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          profile: minimal
-          override: true
           components: clippy
       - uses: Swatinem/rust-cache@v2
       - name: Clippy check
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --all-targets --all-features --workspace -- -D warnings
+        run: cargo clippy --all-targets --all-features --workspace -- -D warnings
 
   docs:
     name: Docs
@@ -76,18 +57,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
+        uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Check documentation
         env:
           RUSTDOCFLAGS: -D warnings
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
+        run: cargo doc
 
   coverage:
     name: Code Coverage
@@ -122,16 +97,9 @@ jobs:
         outputs CODECOV_FLAGS
 
     - name: rust toolchain ~ install
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: ${{ steps.vars.outputs.TOOLCHAIN }}
-        default: true
-        profile: minimal # minimal component installation (ie, no documentation)
+      uses: dtolnay/rust-toolchain@nightly
     - name: Test
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: ${{ steps.vars.outputs.CARGO_FEATURES_OPTION }} --no-fail-fast
+      run: cargo test ${{ steps.vars.outputs.CARGO_FEATURES_OPTION }} --no-fail-fast
       env:
         CARGO_INCREMENTAL: "0"
         RUSTC_WRAPPER: ""
