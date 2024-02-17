@@ -167,9 +167,14 @@ impl<T: AsRef<str>> Grid<T> {
         widths.sort_unstable_by(|a, b| b.cmp(a));
 
         let mut col_total_width_so_far = 0;
-        for (i, width) in widths.iter().enumerate() {
-            if width + col_total_width_so_far <= maximum_width {
-                col_total_width_so_far += self.options.filling.width() + width;
+        for (i, &width) in widths.iter().enumerate() {
+            let adjusted_width = if i == 0 {
+                width
+            } else {
+                width + self.options.filling.width()
+            };
+            if col_total_width_so_far + adjusted_width <= maximum_width {
+                col_total_width_so_far += adjusted_width;
             } else {
                 return div_ceil(self.cells.len(), i);
             }
@@ -234,14 +239,14 @@ impl<T: AsRef<str>> Grid<T> {
             let adjusted_width = maximum_width - total_separator_width;
 
             let potential_dimensions = self.column_widths(num_lines, num_columns);
-            if potential_dimensions.widths.iter().sum::<usize>() < adjusted_width {
+            if potential_dimensions.widths.iter().sum::<usize>() <= adjusted_width {
                 smallest_dimensions_yet = Some(potential_dimensions);
             } else {
-                return smallest_dimensions_yet;
+                break;
             }
         }
 
-        None
+        smallest_dimensions_yet
     }
 }
 

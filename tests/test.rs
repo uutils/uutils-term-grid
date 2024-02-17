@@ -207,6 +207,37 @@ fn possible_underflow() {
     println!("{}", grid);
 }
 
+#[test]
+fn exact_fit() {
+    let grid = Grid::new(
+        vec!["a", "b", "c", "d"],
+        GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Spaces(2),
+            width: 4,
+        },
+    );
+
+    assert_eq!(grid.row_count(), 2);
+}
+
+// This is a reproduction of https://github.com/eza-community/eza/issues/845
+#[test]
+fn eza_many_folders() {
+    let cells: Vec<_> = (100000i32..=100401).map(|i| i.to_string()).collect();
+
+    let grid = Grid::new(
+        cells,
+        GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Spaces(2),
+            width: 166,
+        },
+    );
+
+    assert_eq!(grid.row_count(), 20);
+}
+
 // These test are based on the tests in uutils ls, to ensure we won't break
 // it while editing this library.
 mod uutils_ls {
