@@ -10,8 +10,8 @@
 #![deny(unsafe_code)]
 #![doc = include_str!("../README.md")]
 
+use ansi_width::ansi_width;
 use std::fmt;
-use textwrap::core::display_width;
 
 /// Direction cells should be written in: either across or downwards.
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
@@ -43,7 +43,7 @@ impl Filling {
     fn width(&self) -> usize {
         match self {
             Filling::Spaces(w) => *w,
-            Filling::Text(t) => display_width(t),
+            Filling::Text(t) => ansi_width(t),
         }
     }
 }
@@ -96,7 +96,7 @@ pub struct Grid<T: AsRef<str>> {
 impl<T: AsRef<str>> Grid<T> {
     /// Creates a new grid view with the given cells and options
     pub fn new(cells: Vec<T>, options: GridOptions) -> Self {
-        let widths: Vec<usize> = cells.iter().map(|c| display_width(c.as_ref())).collect();
+        let widths: Vec<usize> = cells.iter().map(|c| ansi_width(c.as_ref())).collect();
         let widest_cell_width = widths.iter().copied().max().unwrap_or(0);
         let width = options.width;
 

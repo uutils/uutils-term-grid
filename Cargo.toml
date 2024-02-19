@@ -15,4 +15,4 @@ rust-version = "1.70"
 name = "term_grid"
 
 [dependencies]
-textwrap = { version = "0.16.1", default-features = false, features = ["unicode-width"] }
+ansi-width = "0.1.0"
