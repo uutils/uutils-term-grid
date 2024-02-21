@@ -130,6 +130,11 @@ impl<T: AsRef<str>> Grid<T> {
         self.dimensions.num_lines
     }
 
+    /// The width of each column
+    pub fn column_widths(&self) -> &[usize] {
+        &self.dimensions.widths
+    }
+
     /// Returns whether this display takes up as many columns as were allotted
     /// to it.
     ///
@@ -141,7 +146,7 @@ impl<T: AsRef<str>> Grid<T> {
         self.dimensions.widths.iter().all(|&x| x > 0)
     }
 
-    fn column_widths(&self, num_lines: usize, num_columns: usize) -> Dimensions {
+    fn compute_dimensions(&self, num_lines: usize, num_columns: usize) -> Dimensions {
         let mut column_widths = vec![0; num_columns];
         for (index, cell_width) in self.widths.iter().copied().enumerate() {
             let index = match self.options.direction {
@@ -238,7 +243,7 @@ impl<T: AsRef<str>> Grid<T> {
             // Remove the separator width from the available space.
             let adjusted_width = maximum_width - total_separator_width;
 
-            let potential_dimensions = self.column_widths(num_lines, num_columns);
+            let potential_dimensions = self.compute_dimensions(num_lines, num_columns);
             if potential_dimensions.widths.iter().sum::<usize>() <= adjusted_width {
                 smallest_dimensions_yet = Some(potential_dimensions);
             } else {
