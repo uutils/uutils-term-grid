@@ -89,11 +89,11 @@ five six seven  eight
 nine ten eleven twelve
 ```
 
-[filling]: struct.GridOptions.html#structfield.filling
-[direction]: struct.GridOptions.html#structfield.direction
-[width]: struct.GridOptions.html#structfield.width
-[LeftToRight]: enum.Direction.html#variant.LeftToRight
-[TopToBottom]: enum.Direction.html#variant.TopToBottom
+[filling]: https://docs.rs/uutils_term_grid/latest/term_grid/struct.GridOptions.html#structfield.filling
+[direction]: https://docs.rs/uutils_term_grid/latest/term_grid/struct.GridOptions.html#structfield.direction
+[width]: https://docs.rs/uutils_term_grid/latest/term_grid/struct.GridOptions.html#structfield.width
+[LeftToRight]: https://docs.rs/uutils_term_grid/latest/term_grid/enum.Direction.html#variant.LeftToRight
+[TopToBottom]: https://docs.rs/uutils_term_grid/latest/term_grid/enum.Direction.html#variant.TopToBottom
 
 ## Width of grid cells
 
