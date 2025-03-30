@@ -36,8 +36,10 @@ and a set of options.
 There are three options that must be specified in the [`GridOptions`] value that
 dictate how the grid is formatted:
 
-- [`filling`][filling]: what to put in between two columns — either a number of
-  spaces, or a text string;
+- [`filling`][filling]: how to feel empty space between columns:
+  - [`Filling::Spaces`][Spaces] number of spaces between columns;
+  - [`Filling::Text`][Text] text string separator between columns;
+  - [`Filling::Tabs`][Tabs] special option which adds default 2 spaces as separator, but converts every number of spaces into `\t` character.
 - [`direction`][direction]: specifies whether the cells should go along rows, or
   columns:
   - [`Direction::LeftToRight`][LeftToRight] starts them in the top left and
@@ -94,6 +96,9 @@ nine ten eleven twelve
 [width]: https://docs.rs/uutils_term_grid/latest/term_grid/struct.GridOptions.html#structfield.width
 [LeftToRight]: https://docs.rs/uutils_term_grid/latest/term_grid/enum.Direction.html#variant.LeftToRight
 [TopToBottom]: https://docs.rs/uutils_term_grid/latest/term_grid/enum.Direction.html#variant.TopToBottom
+[Spaces]: https://docs.rs/uutils_term_grid/latest/term_grid/enum.Filling.html#variant.Spaces
+[Text]: https://docs.rs/uutils_term_grid/latest/term_grid/enum.Filling.html#variant.Text
+[Tabs]:https://docs.rs/uutils_term_grid/latest/term_grid/enum.Filling.html#variant.Tabs
 
 ## Width of grid cells
 
