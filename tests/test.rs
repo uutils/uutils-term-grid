@@ -251,7 +251,7 @@ fn filling_with_tabs() {
             width: 24,
         },
     );
-    
+
     let bits = "one\t\t two\t\t three\nfour\t five\t\t six\nseven\t eight\t nine\nten\t\t eleven\t twelve\n";
     assert_eq!(grid.to_string(), bits);
     assert_eq!(grid.row_count(), 4);
