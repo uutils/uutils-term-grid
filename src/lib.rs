@@ -13,6 +13,12 @@
 use ansi_width::ansi_width;
 use std::fmt;
 
+/// Number of spaces in one \t.
+pub const SPACES_IN_TAB: usize = 8;
+
+// Default size for tab separator.
+const DEFAULT_SEPARATOR_SIZE: usize = 2;
+
 /// Direction cells should be written in: either across or downwards.
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub enum Direction {
@@ -37,6 +43,9 @@ pub enum Filling {
     ///
     /// `"|"` is a common choice.
     Text(String),
+
+    /// Size of spaces to replace with \t
+    Tabs(usize),
 }
 
 impl Filling {
@@ -44,6 +53,9 @@ impl Filling {
         match self {
             Filling::Spaces(w) => *w,
             Filling::Text(t) => ansi_width(t),
+            // Need to return default separator size to
+            // calculate width of the grid correctly.
+            Filling::Tabs(_) => DEFAULT_SEPARATOR_SIZE,
         }
     }
 }
@@ -257,9 +269,15 @@ impl<T: AsRef<str>> Grid<T> {
 
 impl<T: AsRef<str>> fmt::Display for Grid<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        let separator = match &self.options.filling {
-            Filling::Spaces(n) => " ".repeat(*n),
-            Filling::Text(s) => s.clone(),
+        // If cells are empty then, nothing to print, skip.
+        if self.cells.is_empty() {
+            return Ok(());
+        }
+
+        let (tab_size, separator) = match &self.options.filling {
+            Filling::Spaces(n) => (0, " ".repeat(*n)),
+            Filling::Text(s) => (0, s.clone()),
+            Filling::Tabs(n) => (*n, " ".repeat(DEFAULT_SEPARATOR_SIZE)),
         };
 
         // Initialize a buffer of spaces. The idea here is that any cell
@@ -270,9 +288,14 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
         // We overestimate how many spaces we need, but this is not
         // part of the loop and it's therefore not super important to
         // get exactly right.
-        let padding = " ".repeat(self.widest_cell_width);
+        let mut padding = " ".repeat(self.widest_cell_width);
+        // Push separator as the last element to be able to add padding and
+        // separator in one write_str call.
+        padding.push_str(&separator);
 
         for y in 0..self.dimensions.num_lines {
+            // Current position on the line.
+            let mut cursor: usize = 0;
             for x in 0..self.dimensions.widths.len() {
                 let num = match self.options.direction {
                     Direction::LeftToRight => y * self.dimensions.widths.len() + x,
@@ -287,7 +310,6 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                 let contents = &self.cells[num];
                 let width = self.widths[num];
                 let last_in_row = x == self.dimensions.widths.len() - 1;
-
                 let col_width = self.dimensions.widths[x];
                 let padding_size = col_width - width;
 
@@ -306,10 +328,36 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                 // another optimization.
                 f.write_str(contents.as_ref())?;
                 if !last_in_row {
-                    if padding_size > 0 {
-                        f.write_str(&padding[0..padding_size])?;
+                    // Special case if tab size was not set. Fill with spaces and separator.
+                    if tab_size == 0 {
+                        f.write_str(&padding[padding.len() - padding_size - separator.len()..])?;
+                    } else {
+                        // Move cursor to the end of the current contents.
+                        cursor += width;
+                        // Calculate position of the next column start.
+                        let to: usize = cursor + padding_size + separator.len();
+                        // The size of \t can be inconsistent in terminal.
+                        // Tab stops are relative to the cursor position e.g.,
+                        //  * cursor = 0, \t moves to column 8;
+                        //  * cursor = 5, \t moves to column 8 (3 spaces);
+                        //  * cursor = 9, \t moves to column 16 (7 spaces).
+                        // Instead of adding tabs here, calculate the required
+                        // number to call write_str once.
+                        let mut tabs: usize = 0;
+                        while cursor + 1 < to && (cursor / tab_size) != (to / tab_size) {
+                            tabs += 1;
+                            cursor += tab_size - (cursor % tab_size);
+                        }
+
+                        if tabs != 0 {
+                            f.write_str(&"\t".repeat(tabs))?;
+                        }
+
+                        if cursor != to {
+                            f.write_str(&padding[..(to - cursor)])?;
+                            cursor = to;
+                        }
                     }
-                    f.write_str(&separator)?;
                 }
             }
             f.write_str("\n")?;
