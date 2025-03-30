@@ -238,6 +238,25 @@ fn eza_many_folders() {
     assert_eq!(grid.row_count(), 20);
 }
 
+#[test]
+fn filling_with_tabs() {
+    let grid = Grid::new(
+        vec![
+            "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+            "eleven", "twelve",
+        ],
+        GridOptions {
+            filling: Filling::Tabs(2),
+            direction: Direction::LeftToRight,
+            width: 24,
+        },
+    );
+    
+    let bits = "one\t\t two\t\t three\nfour\t five\t\t six\nseven\t eight\t nine\nten\t\t eleven\t twelve\n";
+    assert_eq!(grid.to_string(), bits);
+    assert_eq!(grid.row_count(), 4);
+}
+
 // These test are based on the tests in uutils ls, to ensure we won't break
 // it while editing this library.
 mod uutils_ls {
