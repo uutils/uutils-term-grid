@@ -319,7 +319,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                 let contents = &self.cells[current];
                 let width = self.widths[current];
                 let col_width = self.dimensions.widths[x];
-                let padding_size = col_width - width;
+                let padding_size = col_width - width + separator.len();
 
                 // The final column doesn’t need to have trailing spaces,
                 // as long as it’s left-aligned.
