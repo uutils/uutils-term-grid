@@ -327,7 +327,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                 if !last_in_row {
                     // Special case if tab size was not set. Fill with spaces and separator.
                     if tab_size == 0 {
-                        f.write_str(&padding[padding.len() - padding_size..])?;
+                        f.write_str(&padding[..padding_size])?;
                         f.write_str(&separator)?;
                     } else {
                         // Move cursor to the end of the current contents.
