@@ -16,8 +16,8 @@ use std::fmt;
 /// Number of spaces in one \t.
 pub const SPACES_IN_TAB: usize = 8;
 
-// Default size for tab separator.
-const DEFAULT_SEPARATOR_SIZE: usize = 2;
+/// Default size for separator in spaces.
+pub const DEFAULT_SEPARATOR_SIZE: usize = 2;
 
 /// Direction cells should be written in: either across or downwards.
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
