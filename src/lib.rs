@@ -288,10 +288,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
         // We overestimate how many spaces we need, but this is not
         // part of the loop and it's therefore not super important to
         // get exactly right.
-        let mut padding = " ".repeat(self.widest_cell_width);
-        // Push separator as the last element to be able to add padding and
-        // separator in one write_str call.
-        padding.push_str(&separator);
+        let padding = " ".repeat(self.widest_cell_width);
 
         for y in 0..self.dimensions.num_lines {
             // Current position on the line.
@@ -311,7 +308,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                 let width = self.widths[num];
                 let last_in_row = x == self.dimensions.widths.len() - 1;
                 let col_width = self.dimensions.widths[x];
-                let padding_size = col_width - width + separator.len();
+                let padding_size = col_width - width;
 
                 // The final column doesn’t need to have trailing spaces,
                 // as long as it’s left-aligned.
@@ -331,11 +328,12 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                     // Special case if tab size was not set. Fill with spaces and separator.
                     if tab_size == 0 {
                         f.write_str(&padding[padding.len() - padding_size..])?;
+                        f.write_str(&separator)?;
                     } else {
                         // Move cursor to the end of the current contents.
                         cursor += width;
                         // Calculate position of the next column start.
-                        let to: usize = cursor + padding_size;
+                        let to: usize = cursor + padding_size + DEFAULT_SEPARATOR_SIZE;
                         // The size of \t can be inconsistent in terminal.
                         // Tab stops are relative to the cursor position e.g.,
                         //  * cursor = 0, \t moves to column 8;
