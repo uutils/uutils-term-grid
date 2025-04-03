@@ -3,7 +3,7 @@
 
 // spell-checker:ignore underflowed
 
-use term_grid::{Direction, Filling, Grid, GridOptions};
+use term_grid::{Direction, Filling, Grid, GridOptions, SPACES_IN_TAB};
 
 #[test]
 fn no_items() {
@@ -246,8 +246,8 @@ fn filling_with_tabs() {
             "eleven", "twelve",
         ],
         GridOptions {
-            filling: Filling::Tabs(2),
             direction: Direction::LeftToRight,
+            filling: Filling::Tabs(2),
             width: 24,
         },
     );
@@ -255,6 +255,21 @@ fn filling_with_tabs() {
     let bits = "one\t\t two\t\t three\nfour\t five\t\t six\nseven\t eight\t nine\nten\t\t eleven\t twelve\n";
     assert_eq!(grid.to_string(), bits);
     assert_eq!(grid.row_count(), 4);
+}
+
+#[test]
+fn padding_bigger_than_widest() {
+    let grid = Grid::new(
+        vec!["1", "2", "3"],
+        GridOptions {
+            direction: Direction::LeftToRight,
+            filling: Filling::Tabs(SPACES_IN_TAB),
+            width: 20,
+        },
+    );
+
+    let bits = "1  2  3\n";
+    assert_eq!(grid.to_string(), bits);
 }
 
 // These test are based on the tests in uutils ls, to ensure we won't break
