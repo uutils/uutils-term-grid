@@ -288,7 +288,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
         // We overestimate how many spaces we need, but this is not
         // part of the loop and it's therefore not super important to
         // get exactly right.
-        let padding = " ".repeat(self.widest_cell_width);
+        let padding = " ".repeat(self.widest_cell_width + self.options.filling.width());
 
         for y in 0..self.dimensions.num_lines {
             // Current position on the line.
