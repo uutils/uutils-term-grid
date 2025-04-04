@@ -294,19 +294,25 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
             // Current position on the line.
             let mut cursor: usize = 0;
             for x in 0..self.dimensions.widths.len() {
-                let num = match self.options.direction {
-                    Direction::LeftToRight => y * self.dimensions.widths.len() + x,
-                    Direction::TopToBottom => y + self.dimensions.num_lines * x,
+                let (num, next) = match self.options.direction {
+                    Direction::LeftToRight => (y * self.dimensions.widths.len() + x, 1),
+                    Direction::TopToBottom => {
+                        (y + self.dimensions.num_lines * x, self.dimensions.num_lines)
+                    }
                 };
 
                 // Abandon a line mid-way through if that’s where the cells end
                 if num >= self.cells.len() {
-                    continue;
+                    break;
                 }
 
+                // Last in row checks only the predifined grid width.
+                // It does not check if there will be more entries.
+                // For this purpose we define next value as well.
+                // This prevents printing separator after the actual last value in a row.
+                let last_in_row = x == self.dimensions.widths.len() - 1;
                 let contents = &self.cells[num];
                 let width = self.widths[num];
-                let last_in_row = x == self.dimensions.widths.len() - 1;
                 let col_width = self.dimensions.widths[x];
                 let padding_size = col_width - width;
 
@@ -324,7 +330,9 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                 // We also only call `write_str` when we actually need padding as
                 // another optimization.
                 f.write_str(contents.as_ref())?;
-                if !last_in_row {
+                // In case if this entry was the last on the current line,
+                // there is no need to check for separator or padding.
+                if !last_in_row && num + next < self.cells.len() {
                     // Special case if tab size was not set. Fill with spaces and separator.
                     if tab_size == 0 {
                         f.write_str(&padding[..padding_size])?;

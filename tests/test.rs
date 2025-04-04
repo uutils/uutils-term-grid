@@ -272,6 +272,32 @@ fn padding_bigger_than_widest() {
     assert_eq!(grid.to_string(), bits);
 }
 
+#[test]
+fn odd_number_of_entries() {
+    let cells = vec!["one", "two", "three", "four", "five"];
+    let grid = Grid::new(
+        cells.clone(),
+        GridOptions {
+            direction: Direction::LeftToRight,
+            filling: Filling::Spaces(2),
+            width: 15,
+        },
+    );
+
+    assert_eq!(grid.to_string(), "one    two\nthree  four\nfive\n");
+
+    let grid = Grid::new(
+        cells.clone(),
+        GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Spaces(2),
+            width: 15,
+        },
+    );
+
+    assert_eq!(grid.to_string(), "one    four\ntwo    five\nthree\n");
+}
+
 // These test are based on the tests in uutils ls, to ensure we won't break
 // it while editing this library.
 mod uutils_ls {
