@@ -39,7 +39,7 @@ dictate how the grid is formatted:
 - [`filling`][filling]: how to fill empty space between columns:
   - [`Filling::Spaces`][Spaces] number of spaces between columns;
   - [`Filling::Text`][Text] text string separator between columns;
-  - [`Filling::Tabs`][Tabs] special option which adds default 2 spaces as separator, but converts every number of spaces into `\t` character.
+  - [`Filling::Tabs`][Tabs] special option which allows to set number of spaces between columns and sets the size of `\t` character.
 - [`direction`][direction]: specifies whether the cells should go along rows, or
   columns:
   - [`Direction::LeftToRight`][LeftToRight] starts them in the top left and
