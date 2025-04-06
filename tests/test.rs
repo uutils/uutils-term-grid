@@ -325,6 +325,26 @@ fn different_size_separator_with_tabs() {
     assert_eq!(grid.to_string(), bits);
 }
 
+#[test]
+fn use_max_possible_width() {
+    let grid = Grid::new(
+        vec![
+            "test1", "test2", "test3", "test4", "test5", "test6", "test7", "test8", "test9",
+            "test10", "test11",
+        ],
+        GridOptions {
+            filling: Filling::Text("||".to_string()),
+            direction: Direction::LeftToRight,
+            width: 69,
+        },
+    );
+
+    let bits = "test1 ||test2 ||test3||test4||test5||test6||test7||test8||test9\ntest10||test11\n";
+
+    assert_eq!(grid.to_string(), bits);
+    assert_eq!(grid.row_count(), 2);
+}
+
 // These test are based on the tests in uutils ls, to ensure we won't break
 // it while editing this library.
 mod uutils_ls {
