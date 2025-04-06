@@ -345,29 +345,26 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                     } else {
                         // Move cursor to the end of the current contents.
                         cursor += width;
-                        // Calculate position of the next column start.
-                        let to: usize = cursor + padding_size + DEFAULT_SEPARATOR_SIZE;
+                        let total_spaces = padding_size + self.options.filling.width();
                         // The size of \t can be inconsistent in terminal.
                         // Tab stops are relative to the cursor position e.g.,
                         //  * cursor = 0, \t moves to column 8;
                         //  * cursor = 5, \t moves to column 8 (3 spaces);
                         //  * cursor = 9, \t moves to column 16 (7 spaces).
-                        // Instead of adding tabs here, calculate the required
-                        // number to call write_str once.
-                        let mut tabs: usize = 0;
-                        while cursor + 1 < to && (cursor / tab_size) != (to / tab_size) {
-                            tabs += 1;
-                            cursor += tab_size - (cursor % tab_size);
-                        }
+                        // Calculate first \t size.
+                        let first_tab = tab_size - (cursor % tab_size);
 
-                        if tabs != 0 {
+                        if first_tab > total_spaces {
+                            f.write_str(&padding[..total_spaces])?;
+                        } else {
+                            let rest_spaces = total_spaces - first_tab;
+                            let tabs = 1 + (rest_spaces / tab_size);
+                            let spaces = rest_spaces % tab_size;
                             f.write_str(&"\t".repeat(tabs))?;
+                            f.write_str(&padding[..spaces])?;
                         }
 
-                        if cursor != to {
-                            f.write_str(&padding[..(to - cursor)])?;
-                            cursor = to;
-                        }
+                        cursor += total_spaces;
                     }
                 }
             }
