@@ -58,8 +58,6 @@ impl Filling {
         match self {
             Filling::Spaces(w) => *w,
             Filling::Text(t) => ansi_width(t),
-            // Need to return default separator size to
-            // calculate width of the grid correctly.
             Filling::Tabs { spaces, .. } => *spaces,
         }
     }
