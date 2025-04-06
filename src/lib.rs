@@ -304,7 +304,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                     }
                 };
 
-                // Abandon a line mid-way through if that’s where the cells end
+                // Abandon a line mid-way through if that’s where the cells end.
                 if num >= self.cells.len() {
                     break;
                 }
@@ -333,37 +333,40 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                 // We also only call `write_str` when we actually need padding as
                 // another optimization.
                 f.write_str(contents.as_ref())?;
+
                 // In case this entry was the last on the current line,
                 // there is no need to print the separator and padding.
-                if !last_in_row && num + next < self.cells.len() {
-                    // Special case if tab size was not set. Fill with spaces and separator.
-                    if tab_size == 0 {
-                        f.write_str(&padding[..padding_size])?;
-                        f.write_str(&separator)?;
+                if last_in_row || num + next >= self.cells.len() {
+                    break;
+                }
+
+                // Special case if tab size was not set. Fill with spaces and separator.
+                if tab_size == 0 {
+                    f.write_str(&padding[..padding_size])?;
+                    f.write_str(&separator)?;
+                } else {
+                    // Move cursor to the end of the current contents.
+                    cursor += width;
+                    let total_spaces = padding_size + self.options.filling.width();
+                    // The size of \t can be inconsistent in terminal.
+                    // Tab stops are relative to the cursor position e.g.,
+                    //  * cursor = 0, \t moves to column 8;
+                    //  * cursor = 5, \t moves to column 8 (3 spaces);
+                    //  * cursor = 9, \t moves to column 16 (7 spaces).
+                    // Calculate first \t size.
+                    let first_tab = tab_size - (cursor % tab_size);
+
+                    if first_tab > total_spaces {
+                        f.write_str(&padding[..total_spaces])?;
                     } else {
-                        // Move cursor to the end of the current contents.
-                        cursor += width;
-                        let total_spaces = padding_size + self.options.filling.width();
-                        // The size of \t can be inconsistent in terminal.
-                        // Tab stops are relative to the cursor position e.g.,
-                        //  * cursor = 0, \t moves to column 8;
-                        //  * cursor = 5, \t moves to column 8 (3 spaces);
-                        //  * cursor = 9, \t moves to column 16 (7 spaces).
-                        // Calculate first \t size.
-                        let first_tab = tab_size - (cursor % tab_size);
-
-                        if first_tab > total_spaces {
-                            f.write_str(&padding[..total_spaces])?;
-                        } else {
-                            let rest_spaces = total_spaces - first_tab;
-                            let tabs = 1 + (rest_spaces / tab_size);
-                            let spaces = rest_spaces % tab_size;
-                            f.write_str(&"\t".repeat(tabs))?;
-                            f.write_str(&padding[..spaces])?;
-                        }
-
-                        cursor += total_spaces;
+                        let rest_spaces = total_spaces - first_tab;
+                        let tabs = 1 + (rest_spaces / tab_size);
+                        let spaces = rest_spaces % tab_size;
+                        f.write_str(&"\t".repeat(tabs))?;
+                        f.write_str(&padding[..spaces])?;
                     }
+
+                    cursor += total_spaces;
                 }
             }
             f.write_str("\n")?;
