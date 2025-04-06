@@ -44,7 +44,7 @@ pub enum Filling {
     /// `"|"` is a common choice.
     Text(String),
 
-    /// Size of spaces to replace with \t
+    /// Size of \t in spaces
     Tabs(usize),
 }
 
