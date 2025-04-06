@@ -3,7 +3,7 @@
 
 // spell-checker:ignore underflowed
 
-use term_grid::{Direction, Filling, Grid, GridOptions, SPACES_IN_TAB};
+use term_grid::{Direction, Filling, Grid, GridOptions, DEFAULT_SEPARATOR_SIZE, SPACES_IN_TAB};
 
 #[test]
 fn no_items() {
@@ -247,7 +247,10 @@ fn filling_with_tabs() {
         ],
         GridOptions {
             direction: Direction::LeftToRight,
-            filling: Filling::Tabs(2),
+            filling: Filling::Tabs {
+                spaces: DEFAULT_SEPARATOR_SIZE,
+                tab_size: 2,
+            },
             width: 24,
         },
     );
@@ -263,7 +266,10 @@ fn padding_bigger_than_widest() {
         vec!["1", "2", "3"],
         GridOptions {
             direction: Direction::LeftToRight,
-            filling: Filling::Tabs(SPACES_IN_TAB),
+            filling: Filling::Tabs {
+                spaces: DEFAULT_SEPARATOR_SIZE,
+                tab_size: SPACES_IN_TAB,
+            },
             width: 20,
         },
     );
@@ -296,6 +302,27 @@ fn odd_number_of_entries() {
     );
 
     assert_eq!(grid.to_string(), "one    four\ntwo    five\nthree\n");
+}
+
+#[test]
+fn different_size_separator_with_tabs() {
+    let grid = Grid::new(
+        vec![
+            "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+            "eleven", "twelve",
+        ],
+        GridOptions {
+            direction: Direction::LeftToRight,
+            filling: Filling::Tabs {
+                spaces: 4,
+                tab_size: 2,
+            },
+            width: 40,
+        },
+    );
+
+    let bits = "one\t\t\ttwo\t\t three\t\t four\nfive\t\tsix\t\t seven\t\t eight\nnine\t\tten\t\t eleven\t\t twelve\n";
+    assert_eq!(grid.to_string(), bits);
 }
 
 // These test are based on the tests in uutils ls, to ensure we won't break

@@ -1,7 +1,7 @@
 // For the full copyright and license information, please view the LICENSE
 // file that was distributed with this source code.
 
-use term_grid::{Direction, Filling, Grid, GridOptions};
+use term_grid::{Direction, Filling, Grid, GridOptions, DEFAULT_SEPARATOR_SIZE};
 
 // This produces:
 //
@@ -20,7 +20,10 @@ fn main() {
         cells,
         GridOptions {
             direction: Direction::TopToBottom,
-            filling: Filling::Tabs(8),
+            filling: Filling::Tabs {
+                spaces: DEFAULT_SEPARATOR_SIZE,
+                tab_size: 8,
+            },
             width: 80,
         },
     );

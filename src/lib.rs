@@ -44,8 +44,13 @@ pub enum Filling {
     /// `"|"` is a common choice.
     Text(String),
 
-    /// Size of \t in spaces
-    Tabs(usize),
+    /// Fill spaces with \t
+    Tabs {
+        /// A number of spaces
+        spaces: usize,
+        /// Size of \t in spaces
+        tab_size: usize,
+    },
 }
 
 impl Filling {
@@ -55,7 +60,7 @@ impl Filling {
             Filling::Text(t) => ansi_width(t),
             // Need to return default separator size to
             // calculate width of the grid correctly.
-            Filling::Tabs(_) => DEFAULT_SEPARATOR_SIZE,
+            Filling::Tabs { spaces, .. } => *spaces,
         }
     }
 }
@@ -277,7 +282,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
         let (tab_size, separator) = match &self.options.filling {
             Filling::Spaces(n) => (0, " ".repeat(*n)),
             Filling::Text(s) => (0, s.clone()),
-            Filling::Tabs(n) => (*n, " ".repeat(DEFAULT_SEPARATOR_SIZE)),
+            Filling::Tabs { spaces, tab_size } => (*tab_size, " ".repeat(*spaces)),
         };
 
         // Initialize a buffer of spaces. The idea here is that any cell
