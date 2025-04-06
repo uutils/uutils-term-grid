@@ -306,7 +306,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                     break;
                 }
 
-                // Last in row checks only the predifined grid width.
+                // Last in row checks only the predefined grid width.
                 // It does not check if there will be more entries.
                 // For this purpose we define next value as well.
                 // This prevents printing separator after the actual last value in a row.
@@ -330,8 +330,8 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                 // We also only call `write_str` when we actually need padding as
                 // another optimization.
                 f.write_str(contents.as_ref())?;
-                // In case if this entry was the last on the current line,
-                // there is no need to check for separator or padding.
+                // In case this entry was the last on the current line,
+                // there is no need to print the separator and padding.
                 if !last_in_row && num + next < self.cells.len() {
                     // Special case if tab size was not set. Fill with spaces and separator.
                     if tab_size == 0 {
