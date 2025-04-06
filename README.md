@@ -98,11 +98,10 @@ nine ten eleven twelve
 ## Width of grid cells
 
 This library calculates the width of strings as displayed in the terminal using
-the [`textwrap`][textwrap] library (with the [`display_width`][display_width] function).
-This takes into account the width of characters and ignores ANSI codes.
+the [`ansi-width`][ansi-width] crate. This takes into account the width of
+characters and ignores ANSI codes.
 
 The width calculation is currently not configurable. If you have a use-case for
 which this calculation is wrong, please open an issue.
 
-[textwrap]: https://docs.rs/textwrap/latest/textwrap/index.html
-[display_width]: https://docs.rs/textwrap/latest/textwrap/core/fn.display_width.html
+[ansi-width]: https://docs.rs/ansi-width
