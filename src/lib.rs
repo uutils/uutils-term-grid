@@ -13,6 +13,12 @@
 use ansi_width::ansi_width;
 use std::fmt;
 
+/// Number of spaces in one \t.
+pub const SPACES_IN_TAB: usize = 8;
+
+/// Default size for separator in spaces.
+pub const DEFAULT_SEPARATOR_SIZE: usize = 2;
+
 /// Direction cells should be written in: either across or downwards.
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub enum Direction {
@@ -37,6 +43,14 @@ pub enum Filling {
     ///
     /// `"|"` is a common choice.
     Text(String),
+
+    /// Fill spaces with `\t`
+    Tabs {
+        /// A number of spaces
+        spaces: usize,
+        /// Size of `\t` in spaces
+        tab_size: usize,
+    },
 }
 
 impl Filling {
@@ -44,6 +58,7 @@ impl Filling {
         match self {
             Filling::Spaces(w) => *w,
             Filling::Text(t) => ansi_width(t),
+            Filling::Tabs { spaces, .. } => *spaces,
         }
     }
 }
@@ -257,9 +272,15 @@ impl<T: AsRef<str>> Grid<T> {
 
 impl<T: AsRef<str>> fmt::Display for Grid<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        let separator = match &self.options.filling {
-            Filling::Spaces(n) => " ".repeat(*n),
-            Filling::Text(s) => s.clone(),
+        // If cells are empty then, nothing to print, skip.
+        if self.cells.is_empty() {
+            return Ok(());
+        }
+
+        let (tab_size, separator) = match &self.options.filling {
+            Filling::Spaces(n) => (0, " ".repeat(*n)),
+            Filling::Text(s) => (0, s.clone()),
+            Filling::Tabs { spaces, tab_size } => (*tab_size, " ".repeat(*spaces)),
         };
 
         // Initialize a buffer of spaces. The idea here is that any cell
@@ -270,24 +291,33 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
         // We overestimate how many spaces we need, but this is not
         // part of the loop and it's therefore not super important to
         // get exactly right.
-        let padding = " ".repeat(self.widest_cell_width);
+        let padding = " ".repeat(self.widest_cell_width + self.options.filling.width());
 
         for y in 0..self.dimensions.num_lines {
+            // Current position on the line.
+            let mut cursor: usize = 0;
             for x in 0..self.dimensions.widths.len() {
-                let num = match self.options.direction {
-                    Direction::LeftToRight => y * self.dimensions.widths.len() + x,
-                    Direction::TopToBottom => y + self.dimensions.num_lines * x,
+                // Calculate position of the current element of the grid
+                // in cells and widths vectors and the offset to the next value.
+                let (current, offset) = match self.options.direction {
+                    Direction::LeftToRight => (y * self.dimensions.widths.len() + x, 1),
+                    Direction::TopToBottom => {
+                        (y + self.dimensions.num_lines * x, self.dimensions.num_lines)
+                    }
                 };
 
-                // Abandon a line mid-way through if that’s where the cells end
-                if num >= self.cells.len() {
-                    continue;
+                // Abandon a line mid-way through if that’s where the cells end.
+                if current >= self.cells.len() {
+                    break;
                 }
 
-                let contents = &self.cells[num];
-                let width = self.widths[num];
+                // Last in row checks only the predefined grid width.
+                // It does not check if there will be more entries.
+                // For this purpose we define next value as well.
+                // This prevents printing separator after the actual last value in a row.
                 let last_in_row = x == self.dimensions.widths.len() - 1;
-
+                let contents = &self.cells[current];
+                let width = self.widths[current];
                 let col_width = self.dimensions.widths[x];
                 let padding_size = col_width - width;
 
@@ -305,11 +335,40 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                 // We also only call `write_str` when we actually need padding as
                 // another optimization.
                 f.write_str(contents.as_ref())?;
-                if !last_in_row {
-                    if padding_size > 0 {
-                        f.write_str(&padding[0..padding_size])?;
-                    }
+
+                // In case this entry was the last on the current line,
+                // there is no need to print the separator and padding.
+                if last_in_row || current + offset >= self.cells.len() {
+                    break;
+                }
+
+                // Special case if tab size was not set. Fill with spaces and separator.
+                if tab_size == 0 {
+                    f.write_str(&padding[..padding_size])?;
                     f.write_str(&separator)?;
+                } else {
+                    // Move cursor to the end of the current contents.
+                    cursor += width;
+                    let total_spaces = padding_size + self.options.filling.width();
+                    // The size of \t can be inconsistent in terminal.
+                    // Tab stops are relative to the cursor position e.g.,
+                    //  * cursor = 0, \t moves to column 8;
+                    //  * cursor = 5, \t moves to column 8 (3 spaces);
+                    //  * cursor = 9, \t moves to column 16 (7 spaces).
+                    // Calculate the nearest \t position in relation to cursor.
+                    let closest_tab = tab_size - (cursor % tab_size);
+
+                    if closest_tab > total_spaces {
+                        f.write_str(&padding[..total_spaces])?;
+                    } else {
+                        let rest_spaces = total_spaces - closest_tab;
+                        let tabs = 1 + (rest_spaces / tab_size);
+                        let spaces = rest_spaces % tab_size;
+                        f.write_str(&"\t".repeat(tabs))?;
+                        f.write_str(&padding[..spaces])?;
+                    }
+
+                    cursor += total_spaces;
                 }
             }
             f.write_str("\n")?;
