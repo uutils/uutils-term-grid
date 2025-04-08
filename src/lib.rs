@@ -355,13 +355,13 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                     //  * cursor = 0, \t moves to column 8;
                     //  * cursor = 5, \t moves to column 8 (3 spaces);
                     //  * cursor = 9, \t moves to column 16 (7 spaces).
-                    // Calculate first \t size.
-                    let first_tab = tab_size - (cursor % tab_size);
+                    // Calculate the nearest \t position in relation to cursor.
+                    let closest_tab = tab_size - (cursor % tab_size);
 
-                    if first_tab > total_spaces {
+                    if closest_tab > total_spaces {
                         f.write_str(&padding[..total_spaces])?;
                     } else {
-                        let rest_spaces = total_spaces - first_tab;
+                        let rest_spaces = total_spaces - closest_tab;
                         let tabs = 1 + (rest_spaces / tab_size);
                         let spaces = rest_spaces % tab_size;
                         f.write_str(&"\t".repeat(tabs))?;
