@@ -325,6 +325,21 @@ fn different_size_separator_with_tabs() {
     assert_eq!(grid.to_string(), bits);
 }
 
+#[test]
+fn use_minimal_optimal_lines() {
+    let grid = Grid::new(
+        vec!["a", "b", "ccc", "ddd"],
+        GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Spaces(2),
+            width: 6,
+        },
+    );
+
+    let expected = "a  ccc\nb  ddd\n";
+    assert_eq!(grid.to_string(), expected);
+}
+
 // These test are based on the tests in uutils ls, to ensure we won't break
 // it while editing this library.
 mod uutils_ls {

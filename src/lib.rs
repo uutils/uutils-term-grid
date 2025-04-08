@@ -6,7 +6,6 @@
 #![warn(missing_docs)]
 #![warn(nonstandard_style)]
 #![warn(trivial_casts, trivial_numeric_casts)]
-#![warn(unused)]
 #![deny(unsafe_code)]
 #![doc = include_str!("../README.md")]
 
@@ -168,9 +167,7 @@ impl<T: AsRef<str>> Grid<T> {
                 Direction::LeftToRight => index % num_columns,
                 Direction::TopToBottom => index / num_lines,
             };
-            if cell_width > column_widths[index] {
-                column_widths[index] = cell_width;
-            }
+            column_widths[index] = cell_width.max(column_widths[index]);
         }
 
         Dimensions {
@@ -179,94 +176,50 @@ impl<T: AsRef<str>> Grid<T> {
         }
     }
 
-    fn theoretical_max_num_lines(&self, maximum_width: usize) -> usize {
-        // TODO: Make code readable / efficient.
-        let mut widths = self.widths.clone();
-
-        // Sort widths in reverse order
-        widths.sort_unstable_by(|a, b| b.cmp(a));
-
-        let mut col_total_width_so_far = 0;
-        for (i, &width) in widths.iter().enumerate() {
-            let adjusted_width = if i == 0 {
-                width
-            } else {
-                width + self.options.filling.width()
-            };
-            if col_total_width_so_far + adjusted_width <= maximum_width {
-                col_total_width_so_far += adjusted_width;
-            } else {
-                return div_ceil(self.cells.len(), i);
-            }
-        }
-
-        // If we make it to this point, we have exhausted all cells before
-        // reaching the maximum width; the theoretical max number of lines
-        // needed to display all cells is 1.
-        1
-    }
-
     fn width_dimensions(&self, maximum_width: usize) -> Option<Dimensions> {
         if self.widest_cell_width > maximum_width {
             // Largest cell is wider than maximum width; it is impossible to fit.
             return None;
         }
 
-        if self.cells.is_empty() {
-            return Some(Dimensions {
-                num_lines: 0,
-                widths: Vec::new(),
-            });
-        }
+        // We compute a maximum bound on the number of rows. This the the number
+        // of lines we would have if each cell had the width of the widest element.
+        // This allows us to exit the loop below a bit early if we don't find a
+        // solution.
+        let max_rows = {
+            // The first cell doesn't have filling, we just subtract its width
+            // and add 1 to the columns.
+            let w = maximum_width - self.widest_cell_width;
+            let cols = 1 + w / (self.widest_cell_width + self.options.filling.width());
 
-        if self.cells.len() == 1 {
-            let cell_widths = self.widths[0];
-            return Some(Dimensions {
-                num_lines: 1,
-                widths: vec![cell_widths],
-            });
-        }
+            // Compute the number of lines from the number of columns.
+            self.cells.len().div_ceil(cols)
+        };
 
-        let theoretical_max_num_lines = self.theoretical_max_num_lines(maximum_width);
-        if theoretical_max_num_lines == 1 {
-            // This if—statement is necessary for the function to work correctly
-            // for small inputs.
-            return Some(Dimensions {
-                num_lines: 1,
-                widths: self.widths.clone(),
-            });
-        }
-        // Instead of numbers of columns, try to find the fewest number of *lines*
+        // Instead of numbers of columns, try to find the fewest number of *rows*
         // that the output will fit in.
-        let mut smallest_dimensions_yet = None;
-        for num_lines in (1..=theoretical_max_num_lines).rev() {
+        for num_rows in 1..=max_rows {
             // The number of columns is the number of cells divided by the number
-            // of lines, *rounded up*.
-            let num_columns = div_ceil(self.cells.len(), num_lines);
-
-            // Early abort: if there are so many columns that the width of the
-            // *column separators* is bigger than the width of the screen, then
-            // don’t even try to tabulate it.
-            // This is actually a necessary check, because the width is stored as
-            // a usize, and making it go negative makes it huge instead, but it
-            // also serves as a speed-up.
-            let total_separator_width = (num_columns - 1) * self.options.filling.width();
-            if maximum_width < total_separator_width {
-                continue;
-            }
+            // of lines, rounded up.
+            let num_columns = self.cells.len().div_ceil(num_rows);
 
             // Remove the separator width from the available space.
-            let adjusted_width = maximum_width - total_separator_width;
+            //
+            // If the the space taken up by the separators is larger than the maximum width
+            // we should find a solution with fewer columns, so we continue to the next
+            // iteration.
+            let total_separator_width = (num_columns - 1) * self.options.filling.width();
+            let Some(adjusted_width) = maximum_width.checked_sub(total_separator_width) else {
+                continue;
+            };
 
-            let potential_dimensions = self.compute_dimensions(num_lines, num_columns);
+            let potential_dimensions = self.compute_dimensions(num_rows, num_columns);
             if potential_dimensions.widths.iter().sum::<usize>() <= adjusted_width {
-                smallest_dimensions_yet = Some(potential_dimensions);
-            } else {
-                break;
+                return Some(potential_dimensions);
             }
         }
 
-        smallest_dimensions_yet
+        None
     }
 }
 
@@ -375,19 +328,5 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
         }
 
         Ok(())
-    }
-}
-
-// Adapted from the unstable API:
-// https://doc.rust-lang.org/std/primitive.usize.html#method.div_ceil
-// Can be removed on MSRV 1.73.
-/// Division with upward rounding
-pub const fn div_ceil(lhs: usize, rhs: usize) -> usize {
-    let d = lhs / rhs;
-    let r = lhs % rhs;
-    if r > 0 && rhs > 0 {
-        d + 1
-    } else {
-        d
     }
 }
