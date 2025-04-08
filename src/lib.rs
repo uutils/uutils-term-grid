@@ -297,7 +297,9 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
             // Current position on the line.
             let mut cursor: usize = 0;
             for x in 0..self.dimensions.widths.len() {
-                let (num, next) = match self.options.direction {
+                // Calculate position of the current element of the grid
+                // in cells and widths vectors and the offset to the next value.
+                let (current, offset) = match self.options.direction {
                     Direction::LeftToRight => (y * self.dimensions.widths.len() + x, 1),
                     Direction::TopToBottom => {
                         (y + self.dimensions.num_lines * x, self.dimensions.num_lines)
@@ -305,7 +307,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                 };
 
                 // Abandon a line mid-way through if that’s where the cells end.
-                if num >= self.cells.len() {
+                if current >= self.cells.len() {
                     break;
                 }
 
@@ -314,8 +316,8 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                 // For this purpose we define next value as well.
                 // This prevents printing separator after the actual last value in a row.
                 let last_in_row = x == self.dimensions.widths.len() - 1;
-                let contents = &self.cells[num];
-                let width = self.widths[num];
+                let contents = &self.cells[current];
+                let width = self.widths[current];
                 let col_width = self.dimensions.widths[x];
                 let padding_size = col_width - width;
 
@@ -336,7 +338,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
 
                 // In case this entry was the last on the current line,
                 // there is no need to print the separator and padding.
-                if last_in_row || num + next >= self.cells.len() {
+                if last_in_row || current + offset >= self.cells.len() {
                     break;
                 }
 
