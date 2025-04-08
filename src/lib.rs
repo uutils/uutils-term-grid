@@ -44,11 +44,11 @@ pub enum Filling {
     /// `"|"` is a common choice.
     Text(String),
 
-    /// Fill spaces with \t
+    /// Fill spaces with `\t`
     Tabs {
         /// A number of spaces
         spaces: usize,
-        /// Size of \t in spaces
+        /// Size of `\t` in spaces
         tab_size: usize,
     },
 }
