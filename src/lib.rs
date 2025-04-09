@@ -201,9 +201,8 @@ impl<T: AsRef<str>> Grid<T> {
             .cells
             .len()
             .min((self.options.width + self.options.filling.width()) / widest_column);
-        // Caculate approximate number of rows and columns.
+        // Caculate minimum number of rows.
         let min_lines = div_ceil(self.cells.len(), min_columns);
-        // let appr_num_columns = div_ceil(self.cells.len(), appr_num_lines);
 
         // This is a potential dimension, which can definitely fit all of the cells.
         let mut potential_dimension = self.compute_dimensions(min_lines, min_columns);
