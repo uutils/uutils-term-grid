@@ -196,29 +196,33 @@ impl<T: AsRef<str>> Grid<T> {
             };
         }
 
-        // Calculate number of columns with widest column size.
-        let max_num_columns = self.options.width / widest_column;
-
-        // Caculate approximate number of lines and columns.
-        let appr_num_lines = div_ceil(self.cells.len(), max_num_columns);
-        let appr_num_columns = div_ceil(self.cells.len(), appr_num_lines);
+        // Calculate minimum number of columns with the widest column size.
+        let min_columns = self
+            .cells
+            .len()
+            .min((self.options.width + self.options.filling.width()) / widest_column);
+        // Caculate approximate number of rows and columns.
+        let min_lines = div_ceil(self.cells.len(), min_columns);
+        // let appr_num_columns = div_ceil(self.cells.len(), appr_num_lines);
 
         // This is a potential dimension, which can definitely fit all of the cells.
-        let mut potential_dimension = self.compute_dimensions(appr_num_lines, appr_num_columns);
+        let mut potential_dimension = self.compute_dimensions(min_lines, min_columns);
         // If all of the cells can be fit on one line, return.
-        if appr_num_lines == 1 {
+        if min_lines == 1 {
             return potential_dimension;
         }
 
         // Try to increase number of columns, to see if new dimension can still fit.
-        for num_columns in appr_num_columns + 1.. {
-            let new_width = self.options.width - (num_columns - 1) * self.options.filling.width();
-            let num_lines = div_ceil(self.cells.len(), num_columns);
-            let new_dimension = self.compute_dimensions(num_lines, num_columns);
-            if new_dimension.widths.iter().sum::<usize>() <= new_width {
-                potential_dimension = new_dimension;
-            } else {
+        for num_columns in min_columns + 1.. {
+            let new_width = (num_columns - 1) * self.options.filling.width();
+            if new_width > self.options.width {
                 break;
+            }
+
+            let num_rows = div_ceil(self.cells.len(), num_columns);
+            let new_dimension = self.compute_dimensions(num_rows, num_columns);
+            if new_dimension.widths.iter().sum::<usize>() <= self.options.width - new_width {
+                potential_dimension = new_dimension;
             }
         }
 

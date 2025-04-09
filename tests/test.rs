@@ -345,6 +345,40 @@ fn use_max_possible_width() {
     assert_eq!(grid.row_count(), 2);
 }
 
+#[test]
+fn use_minimal_optimal_lines() {
+    let grid = Grid::new(
+        vec!["a", "b", "ccc", "ddd"],
+        GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Spaces(2),
+            width: 6,
+        },
+    );
+
+    let expected = "a  ccc\nb  ddd\n";
+    assert_eq!(grid.to_string(), expected);
+}
+
+#[test]
+fn weird_column_edge_case() {
+    let grid = Grid::new(
+        vec!["0", "1", "222222222", "333333333", "4", "5", "6", "7", "8"],
+        GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Spaces(2),
+            width: 21,
+        },
+    );
+
+    let expected = "\
+        0  222222222  4  6  8\n\
+        1  333333333  5  7\n\
+    ";
+
+    assert_eq!(grid.to_string(), expected);
+}
+
 // These test are based on the tests in uutils ls, to ensure we won't break
 // it while editing this library.
 mod uutils_ls {
