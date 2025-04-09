@@ -346,6 +346,26 @@ fn use_max_possible_width() {
 }
 
 #[test]
+fn dont_use_max_possible_width() {
+    let grid = Grid::new(
+        vec![
+            "test1", "test2", "test3", "test4", "test5", "test6", "test7", "test8", "test9",
+            "test10", "test11",
+        ],
+        GridOptions {
+            filling: Filling::Text("||".to_string()),
+            direction: Direction::TopToBottom,
+            width: 69,
+        },
+    );
+
+    let bits = "test1||test3||test5||test7||test9 ||test11\ntest2||test4||test6||test8||test10\n";
+
+    assert_eq!(grid.to_string(), bits);
+    assert_eq!(grid.row_count(), 2);
+}
+
+#[test]
 fn use_minimal_optimal_lines() {
     let grid = Grid::new(
         vec!["a", "b", "ccc", "ddd"],
@@ -362,6 +382,8 @@ fn use_minimal_optimal_lines() {
 
 #[test]
 fn weird_column_edge_case() {
+    // Here, 5 columns fit while fewer columns don't. So if we exit too early
+    // while increasing columns, we don't find the optimal solution.
     let grid = Grid::new(
         vec!["0", "1", "222222222", "333333333", "4", "5", "6", "7", "8"],
         GridOptions {
@@ -376,6 +398,7 @@ fn weird_column_edge_case() {
         1  333333333  5  7\n\
     ";
 
+    println!("{grid}");
     assert_eq!(grid.to_string(), expected);
 }
 

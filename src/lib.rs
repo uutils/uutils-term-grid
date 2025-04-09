@@ -79,7 +79,7 @@ pub struct GridOptions {
 #[derive(PartialEq, Eq, Debug)]
 struct Dimensions {
     /// The number of lines in the grid.
-    num_lines: usize,
+    num_rows: usize,
 
     /// The width of each column in the grid. The length of this vector serves
     /// as the number of columns.
@@ -120,7 +120,7 @@ impl<T: AsRef<str>> Grid<T> {
             widths,
             widest_cell_width,
             dimensions: Dimensions {
-                num_lines: 0,
+                num_rows: 0,
                 widths: Vec::new(),
             },
         };
@@ -140,7 +140,7 @@ impl<T: AsRef<str>> Grid<T> {
 
     /// The number of rows this display takes up.
     pub fn row_count(&self) -> usize {
-        self.dimensions.num_lines
+        self.dimensions.num_rows
     }
 
     /// The width of each column
@@ -172,7 +172,7 @@ impl<T: AsRef<str>> Grid<T> {
         }
 
         Dimensions {
-            num_lines,
+            num_rows: num_lines,
             widths: column_widths,
         }
     }
@@ -181,7 +181,7 @@ impl<T: AsRef<str>> Grid<T> {
         if self.cells.len() == 1 {
             let cell_widths = self.widths[0];
             return Dimensions {
-                num_lines: 1,
+                num_rows: 1,
                 widths: vec![cell_widths],
             };
         }
@@ -191,36 +191,41 @@ impl<T: AsRef<str>> Grid<T> {
         // If it exceeds terminal's width, return, since it is impossible to fit.
         if widest_column > self.options.width {
             return Dimensions {
-                num_lines: self.cells.len(),
+                num_rows: self.cells.len(),
                 widths: vec![self.widest_cell_width],
             };
         }
 
-        // Calculate minimum number of columns with the widest column size.
+        // Calculate the number of columns if all columns had the size of the largest
+        // column. This is a lower bound on the number of columns.
         let min_columns = self
             .cells
             .len()
             .min((self.options.width + self.options.filling.width()) / widest_column);
-        // Caculate minimum number of rows.
-        let min_lines = div_ceil(self.cells.len(), min_columns);
+
+        // Calculate maximum number of lines and columns.
+        let max_rows = div_ceil(self.cells.len(), min_columns);
 
         // This is a potential dimension, which can definitely fit all of the cells.
-        let mut potential_dimension = self.compute_dimensions(min_lines, min_columns);
-        // If all of the cells can be fit on one line, return.
-        if min_lines == 1 {
+        let mut potential_dimension = self.compute_dimensions(max_rows, min_columns);
+
+        // If all of the cells can be fit on one line, return immediately.
+        if max_rows == 1 {
             return potential_dimension;
         }
 
         // Try to increase number of columns, to see if new dimension can still fit.
-        for num_columns in min_columns + 1.. {
-            let new_width = (num_columns - 1) * self.options.filling.width();
-            if new_width > self.options.width {
+        for num_columns in min_columns + 1..self.cells.len() {
+            let Some(adjusted_width) = self
+                .options
+                .width
+                .checked_sub((num_columns - 1) * self.options.filling.width())
+            else {
                 break;
-            }
-
+            };
             let num_rows = div_ceil(self.cells.len(), num_columns);
             let new_dimension = self.compute_dimensions(num_rows, num_columns);
-            if new_dimension.widths.iter().sum::<usize>() <= self.options.width - new_width {
+            if new_dimension.widths.iter().sum::<usize>() <= adjusted_width {
                 potential_dimension = new_dimension;
             }
         }
@@ -252,7 +257,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
         // get exactly right.
         let padding = " ".repeat(self.widest_cell_width + self.options.filling.width());
 
-        for y in 0..self.dimensions.num_lines {
+        for y in 0..self.dimensions.num_rows {
             // Current position on the line.
             let mut cursor: usize = 0;
             for x in 0..self.dimensions.widths.len() {
@@ -261,7 +266,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                 let (current, offset) = match self.options.direction {
                     Direction::LeftToRight => (y * self.dimensions.widths.len() + x, 1),
                     Direction::TopToBottom => {
-                        (y + self.dimensions.num_lines * x, self.dimensions.num_lines)
+                        (y + self.dimensions.num_rows * x, self.dimensions.num_rows)
                     }
                 };
 
