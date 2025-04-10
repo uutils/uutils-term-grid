@@ -23,7 +23,7 @@ dependencies section:
 
 ```toml
 [dependencies]
-uutils_term_grid = "0.6"
+uutils_term_grid = "0.7"
 ```
 
 The Minimum Supported Rust Version is 1.70.
