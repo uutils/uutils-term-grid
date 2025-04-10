@@ -325,6 +325,83 @@ fn different_size_separator_with_tabs() {
     assert_eq!(grid.to_string(), bits);
 }
 
+#[test]
+fn use_max_possible_width() {
+    let grid = Grid::new(
+        vec![
+            "test1", "test2", "test3", "test4", "test5", "test6", "test7", "test8", "test9",
+            "test10", "test11",
+        ],
+        GridOptions {
+            filling: Filling::Text("||".to_string()),
+            direction: Direction::LeftToRight,
+            width: 69,
+        },
+    );
+
+    let bits = "test1 ||test2 ||test3||test4||test5||test6||test7||test8||test9\ntest10||test11\n";
+
+    assert_eq!(grid.to_string(), bits);
+    assert_eq!(grid.row_count(), 2);
+}
+
+#[test]
+fn dont_use_max_possible_width() {
+    let grid = Grid::new(
+        vec![
+            "test1", "test2", "test3", "test4", "test5", "test6", "test7", "test8", "test9",
+            "test10", "test11",
+        ],
+        GridOptions {
+            filling: Filling::Text("||".to_string()),
+            direction: Direction::TopToBottom,
+            width: 69,
+        },
+    );
+
+    let bits = "test1||test3||test5||test7||test9 ||test11\ntest2||test4||test6||test8||test10\n";
+
+    assert_eq!(grid.to_string(), bits);
+    assert_eq!(grid.row_count(), 2);
+}
+
+#[test]
+fn use_minimal_optimal_lines() {
+    let grid = Grid::new(
+        vec!["a", "b", "ccc", "ddd"],
+        GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Spaces(2),
+            width: 6,
+        },
+    );
+
+    let expected = "a  ccc\nb  ddd\n";
+    assert_eq!(grid.to_string(), expected);
+}
+
+#[test]
+fn weird_column_edge_case() {
+    // Here, 5 columns fit while fewer columns don't. So if we exit too early
+    // while increasing columns, we don't find the optimal solution.
+    let grid = Grid::new(
+        vec!["0", "1", "222222222", "333333333", "4", "5", "6", "7", "8"],
+        GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Spaces(2),
+            width: 21,
+        },
+    );
+
+    let expected = "\
+        0  222222222  4  6  8\n\
+        1  333333333  5  7\n\
+    ";
+
+    println!("{grid}");
+    assert_eq!(grid.to_string(), expected);
+}
+
 // These test are based on the tests in uutils ls, to ensure we won't break
 // it while editing this library.
 mod uutils_ls {

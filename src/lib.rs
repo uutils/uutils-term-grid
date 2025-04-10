@@ -79,7 +79,7 @@ pub struct GridOptions {
 #[derive(PartialEq, Eq, Debug)]
 struct Dimensions {
     /// The number of lines in the grid.
-    num_lines: usize,
+    num_rows: usize,
 
     /// The width of each column in the grid. The length of this vector serves
     /// as the number of columns.
@@ -113,7 +113,6 @@ impl<T: AsRef<str>> Grid<T> {
     pub fn new(cells: Vec<T>, options: GridOptions) -> Self {
         let widths: Vec<usize> = cells.iter().map(|c| ansi_width(c.as_ref())).collect();
         let widest_cell_width = widths.iter().copied().max().unwrap_or(0);
-        let width = options.width;
 
         let mut grid = Self {
             options,
@@ -121,15 +120,14 @@ impl<T: AsRef<str>> Grid<T> {
             widths,
             widest_cell_width,
             dimensions: Dimensions {
-                num_lines: 0,
+                num_rows: 0,
                 widths: Vec::new(),
             },
         };
 
-        grid.dimensions = grid.width_dimensions(width).unwrap_or(Dimensions {
-            num_lines: grid.cells.len(),
-            widths: vec![widest_cell_width],
-        });
+        if !grid.cells.is_empty() {
+            grid.dimensions = grid.width_dimensions();
+        }
 
         grid
     }
@@ -142,7 +140,7 @@ impl<T: AsRef<str>> Grid<T> {
 
     /// The number of rows this display takes up.
     pub fn row_count(&self) -> usize {
-        self.dimensions.num_lines
+        self.dimensions.num_rows
     }
 
     /// The width of each column
@@ -174,99 +172,65 @@ impl<T: AsRef<str>> Grid<T> {
         }
 
         Dimensions {
-            num_lines,
+            num_rows: num_lines,
             widths: column_widths,
         }
     }
 
-    fn theoretical_max_num_lines(&self, maximum_width: usize) -> usize {
-        // TODO: Make code readable / efficient.
-        let mut widths = self.widths.clone();
-
-        // Sort widths in reverse order
-        widths.sort_unstable_by(|a, b| b.cmp(a));
-
-        let mut col_total_width_so_far = 0;
-        for (i, &width) in widths.iter().enumerate() {
-            let adjusted_width = if i == 0 {
-                width
-            } else {
-                width + self.options.filling.width()
-            };
-            if col_total_width_so_far + adjusted_width <= maximum_width {
-                col_total_width_so_far += adjusted_width;
-            } else {
-                return div_ceil(self.cells.len(), i);
-            }
-        }
-
-        // If we make it to this point, we have exhausted all cells before
-        // reaching the maximum width; the theoretical max number of lines
-        // needed to display all cells is 1.
-        1
-    }
-
-    fn width_dimensions(&self, maximum_width: usize) -> Option<Dimensions> {
-        if self.widest_cell_width > maximum_width {
-            // Largest cell is wider than maximum width; it is impossible to fit.
-            return None;
-        }
-
-        if self.cells.is_empty() {
-            return Some(Dimensions {
-                num_lines: 0,
-                widths: Vec::new(),
-            });
-        }
-
+    fn width_dimensions(&mut self) -> Dimensions {
         if self.cells.len() == 1 {
             let cell_widths = self.widths[0];
-            return Some(Dimensions {
-                num_lines: 1,
+            return Dimensions {
+                num_rows: 1,
                 widths: vec![cell_widths],
-            });
+            };
         }
 
-        let theoretical_max_num_lines = self.theoretical_max_num_lines(maximum_width);
-        if theoretical_max_num_lines == 1 {
-            // This if—statement is necessary for the function to work correctly
-            // for small inputs.
-            return Some(Dimensions {
-                num_lines: 1,
-                widths: self.widths.clone(),
-            });
+        // Calculate widest column size with separator.
+        let widest_column = self.widest_cell_width + self.options.filling.width();
+        // If it exceeds terminal's width, return, since it is impossible to fit.
+        if widest_column > self.options.width {
+            return Dimensions {
+                num_rows: self.cells.len(),
+                widths: vec![self.widest_cell_width],
+            };
         }
-        // Instead of numbers of columns, try to find the fewest number of *lines*
-        // that the output will fit in.
-        let mut smallest_dimensions_yet = None;
-        for num_lines in (1..=theoretical_max_num_lines).rev() {
-            // The number of columns is the number of cells divided by the number
-            // of lines, *rounded up*.
-            let num_columns = div_ceil(self.cells.len(), num_lines);
 
-            // Early abort: if there are so many columns that the width of the
-            // *column separators* is bigger than the width of the screen, then
-            // don’t even try to tabulate it.
-            // This is actually a necessary check, because the width is stored as
-            // a usize, and making it go negative makes it huge instead, but it
-            // also serves as a speed-up.
-            let total_separator_width = (num_columns - 1) * self.options.filling.width();
-            if maximum_width < total_separator_width {
-                continue;
-            }
+        // Calculate the number of columns if all columns had the size of the largest
+        // column. This is a lower bound on the number of columns.
+        let min_columns = self
+            .cells
+            .len()
+            .min((self.options.width + self.options.filling.width()) / widest_column);
 
-            // Remove the separator width from the available space.
-            let adjusted_width = maximum_width - total_separator_width;
+        // Calculate maximum number of lines and columns.
+        let max_rows = div_ceil(self.cells.len(), min_columns);
 
-            let potential_dimensions = self.compute_dimensions(num_lines, num_columns);
-            if potential_dimensions.widths.iter().sum::<usize>() <= adjusted_width {
-                smallest_dimensions_yet = Some(potential_dimensions);
-            } else {
+        // This is a potential dimension, which can definitely fit all of the cells.
+        let mut potential_dimension = self.compute_dimensions(max_rows, min_columns);
+
+        // If all of the cells can be fit on one line, return immediately.
+        if max_rows == 1 {
+            return potential_dimension;
+        }
+
+        // Try to increase number of columns, to see if new dimension can still fit.
+        for num_columns in min_columns + 1..self.cells.len() {
+            let Some(adjusted_width) = self
+                .options
+                .width
+                .checked_sub((num_columns - 1) * self.options.filling.width())
+            else {
                 break;
+            };
+            let num_rows = div_ceil(self.cells.len(), num_columns);
+            let new_dimension = self.compute_dimensions(num_rows, num_columns);
+            if new_dimension.widths.iter().sum::<usize>() <= adjusted_width {
+                potential_dimension = new_dimension;
             }
         }
 
-        smallest_dimensions_yet
+        potential_dimension
     }
 }
 
@@ -293,7 +257,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
         // get exactly right.
         let padding = " ".repeat(self.widest_cell_width + self.options.filling.width());
 
-        for y in 0..self.dimensions.num_lines {
+        for y in 0..self.dimensions.num_rows {
             // Current position on the line.
             let mut cursor: usize = 0;
             for x in 0..self.dimensions.widths.len() {
@@ -302,7 +266,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                 let (current, offset) = match self.options.direction {
                     Direction::LeftToRight => (y * self.dimensions.widths.len() + x, 1),
                     Direction::TopToBottom => {
-                        (y + self.dimensions.num_lines * x, self.dimensions.num_lines)
+                        (y + self.dimensions.num_rows * x, self.dimensions.num_rows)
                     }
                 };
 
