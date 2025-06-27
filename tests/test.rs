@@ -204,7 +204,7 @@ fn possible_underflow() {
         },
     );
 
-    println!("{}", grid);
+    println!("{grid}");
 }
 
 #[test]
