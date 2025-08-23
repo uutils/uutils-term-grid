@@ -25,5 +25,5 @@ fn main() {
         },
     );
 
-    println!("{}", grid);
+    println!("{grid}");
 }
