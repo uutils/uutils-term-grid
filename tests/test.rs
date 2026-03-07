@@ -402,6 +402,30 @@ fn weird_column_edge_case() {
     assert_eq!(grid.to_string(), expected);
 }
 
+// Regression test for the off-by-one in the column-search loop: when cells
+// have varying widths, all cells can sometimes fit on a single row even though
+// the worst-case (widest cell) estimate says they can't. The loop must try
+// num_columns == cells.len() (..= rather than ..).
+//
+// Setup: cells ["aaa","b","c","d"], separator 1, width 9.
+//   widest_column = 3+1 = 4  →  min_columns = (9+1)/4 = 2
+//   Loop with bug  (2+1 .. 4): tries only 3 cols → 2 rows
+//   Loop with fix  (2+1 ..= 4): also tries 4 cols → sum 3+1+1+1=6 ≤ 9-3=6 → 1 row ✓
+#[test]
+fn all_cells_fit_on_one_row_when_widths_vary() {
+    let grid = Grid::new(
+        vec!["aaa", "b", "c", "d"],
+        GridOptions {
+            direction: Direction::LeftToRight,
+            filling: Filling::Spaces(1),
+            width: 9,
+        },
+    );
+
+    assert_eq!(grid.row_count(), 1);
+    assert_eq!(grid.to_string(), "aaa b c d\n");
+}
+
 // These test are based on the tests in uutils ls, to ensure we won't break
 // it while editing this library.
 mod uutils_ls {
