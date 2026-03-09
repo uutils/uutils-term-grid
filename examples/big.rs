@@ -9,7 +9,7 @@ fn main() {
         let mut cells = Vec::new();
         for _ in 0..10000 {
             cells.push(n.to_string());
-            n = n.overflowing_pow(2).0 % 100000000;
+            n = n.overflowing_pow(2).0 % 100_000_000;
         }
 
         let grid = Grid::new(

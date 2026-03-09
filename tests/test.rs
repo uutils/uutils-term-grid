@@ -224,7 +224,7 @@ fn exact_fit() {
 // This is a reproduction of https://github.com/eza-community/eza/issues/845
 #[test]
 fn eza_many_folders() {
-    let cells: Vec<_> = (100000i32..=100401).map(|i| i.to_string()).collect();
+    let cells: Vec<_> = (100_000_i32..=100_401).map(|i| i.to_string()).collect();
 
     let grid = Grid::new(
         cells,
