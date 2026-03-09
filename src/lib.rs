@@ -215,7 +215,7 @@ impl<T: AsRef<str>> Grid<T> {
         }
 
         // Try to increase number of columns, to see if new dimension can still fit.
-        for num_columns in min_columns + 1..self.cells.len() {
+        for num_columns in min_columns + 1..=self.cells.len() {
             let Some(adjusted_width) = self
                 .options
                 .width
