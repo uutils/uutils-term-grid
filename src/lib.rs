@@ -56,9 +56,9 @@ pub enum Filling {
 impl Filling {
     fn width(&self) -> usize {
         match self {
-            Filling::Spaces(w) => *w,
-            Filling::Text(t) => ansi_width(t),
-            Filling::Tabs { spaces, .. } => *spaces,
+            Self::Spaces(w) => *w,
+            Self::Text(t) => ansi_width(t),
+            Self::Tabs { spaces, .. } => *spaces,
         }
     }
 }
