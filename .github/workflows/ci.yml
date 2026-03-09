@@ -48,7 +48,7 @@ jobs:
           components: clippy
       - uses: Swatinem/rust-cache@v2
       - name: Clippy check
-        run: cargo clippy --all-targets --all-features --workspace -- -D warnings
+        run: cargo clippy --all-targets --all-features --workspace -- -D warnings -W clippy::all -W clippy::pedantic -W clippy::nursery -W clippy::cargo -W clippy::suspicious -W clippy::complexity -W clippy::perf -W clippy::style -W clippy::correctness -A clippy::missing_docs_in_private_items
 
   docs:
     name: Docs
