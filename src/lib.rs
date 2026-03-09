@@ -142,7 +142,7 @@ impl<T: AsRef<str>> Grid<T> {
 
     /// The number of rows this display takes up.
     #[must_use]
-    pub fn row_count(&self) -> usize {
+    pub const fn row_count(&self) -> usize {
         self.dimensions.num_rows
     }
 
