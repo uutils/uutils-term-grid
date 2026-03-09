@@ -10,6 +10,8 @@ repository = "https://github.com/uutils/uutils-term-grid"
 version = "0.7.0"
 edition = "2021"
 rust-version = "1.70"
+keywords = ["terminal", "grid", "layout", "format", "display"]
+categories = ["command-line-interface", "text-processing"]
 
 [lib]
 name = "term_grid"
