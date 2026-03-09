@@ -110,6 +110,7 @@ pub struct Grid<T: AsRef<str>> {
 
 impl<T: AsRef<str>> Grid<T> {
     /// Creates a new grid view with the given cells and options
+    #[must_use]
     pub fn new(cells: Vec<T>, options: GridOptions) -> Self {
         let widths: Vec<usize> = cells.iter().map(|c| ansi_width(c.as_ref())).collect();
         let widest_cell_width = widths.iter().copied().max().unwrap_or(0);
@@ -134,16 +135,19 @@ impl<T: AsRef<str>> Grid<T> {
 
     /// The number of terminal columns this display takes up, based on the separator
     /// width and the number and width of the columns.
+    #[must_use]
     pub fn width(&self) -> usize {
         self.dimensions.total_width(self.options.filling.width())
     }
 
     /// The number of rows this display takes up.
+    #[must_use]
     pub fn row_count(&self) -> usize {
         self.dimensions.num_rows
     }
 
     /// The width of each column
+    #[must_use]
     pub fn column_widths(&self) -> &[usize] {
         &self.dimensions.widths
     }
@@ -151,10 +155,11 @@ impl<T: AsRef<str>> Grid<T> {
     /// Returns whether this display takes up as many columns as were allotted
     /// to it.
     ///
-    /// It’s possible to construct tables that don’t actually use up all the
+    /// It's possible to construct tables that don't actually use up all the
     /// columns that they could, such as when there are more columns than
     /// cells! In this case, a column would have a width of zero. This just
     /// checks for that.
+    #[must_use]
     pub fn is_complete(&self) -> bool {
         self.dimensions.widths.iter().all(|&x| x > 0)
     }
@@ -346,6 +351,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
 // https://doc.rust-lang.org/std/primitive.usize.html#method.div_ceil
 // Can be removed on MSRV 1.73.
 /// Division with upward rounding
+#[must_use]
 pub const fn div_ceil(lhs: usize, rhs: usize) -> usize {
     let d = lhs / rhs;
     let r = lhs % rhs;
