@@ -182,7 +182,7 @@ impl<T: AsRef<str>> Grid<T> {
         }
     }
 
-    fn width_dimensions(&mut self) -> Dimensions {
+    fn width_dimensions(&self) -> Dimensions {
         if self.cells.len() == 1 {
             let cell_widths = self.widths[0];
             return Dimensions {
