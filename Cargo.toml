@@ -20,7 +20,7 @@ name = "term_grid"
 ansi-width = "0.1.0"
 
 [dev-dependencies]
-divan = { version = "4.3.0", package = "codspeed-divan-compat" }
+divan = { version = "5.0.0", package = "codspeed-divan-compat" }
 
 [[bench]]
 name = "bench_grid"
