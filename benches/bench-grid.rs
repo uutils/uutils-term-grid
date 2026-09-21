@@ -22,6 +22,7 @@ fn grid_top_to_bottom(bencher: Bencher, n: usize) {
                 direction: Direction::TopToBottom,
                 filling: Filling::Spaces(2),
                 width: 80,
+                line_separator: "\n",
             },
         ))
     });
@@ -37,6 +38,7 @@ fn grid_left_to_right(bencher: Bencher, n: usize) {
                 direction: Direction::LeftToRight,
                 filling: Filling::Spaces(2),
                 width: 80,
+                line_separator: "\n",
             },
         ))
     });
@@ -51,6 +53,7 @@ fn grid_display(bencher: Bencher, n: usize) {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 80,
+            line_separator: "\n",
         },
     );
     bencher.bench(|| black_box(grid.to_string()));
@@ -66,6 +69,7 @@ fn grid_varying_width(bencher: Bencher, width: usize) {
                 direction: Direction::TopToBottom,
                 filling: Filling::Spaces(2),
                 width,
+                line_separator: "\n",
             },
         ))
     });

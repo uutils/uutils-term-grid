@@ -74,6 +74,8 @@ pub struct GridOptions {
 
     /// The width to fill with the grid
     pub width: usize,
+    /// The string to put at the end of each line/row in the grid (`"\n"` or `"\0"`)
+    pub line_separator: &'static str,
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -344,7 +346,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                     cursor += total_spaces;
                 }
             }
-            f.write_str("\n")?;
+            f.write_str(self.options.line_separator)?;
         }
 
         Ok(())
