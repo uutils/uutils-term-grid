@@ -13,7 +13,6 @@ fn no_items() {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 40,
-            line_separator: "\n".into(),
         },
     );
 
@@ -28,7 +27,6 @@ fn one_item() {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 40,
-            line_separator: "\n".into(),
         },
     );
     assert_eq!("1\n", grid.to_string());
@@ -42,7 +40,6 @@ fn one_item_exact_width() {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 10,
-            line_separator: "\n".into(),
         },
     );
 
@@ -57,7 +54,6 @@ fn one_item_just_over() {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 10,
-            line_separator: "\n".into(),
         },
     );
 
@@ -72,7 +68,6 @@ fn two_small_items() {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 40,
-            line_separator: "\n".into(),
         },
     );
 
@@ -88,7 +83,6 @@ fn two_medium_size_items() {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 40,
-            line_separator: "\n".into(),
         },
     );
 
@@ -107,7 +101,6 @@ fn two_big_items() {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 40,
-            line_separator: "\n".into(),
         },
     );
 
@@ -125,7 +118,6 @@ fn that_example_from_earlier() {
             filling: Filling::Spaces(1),
             direction: Direction::LeftToRight,
             width: 24,
-            line_separator: "\n".into(),
         },
     );
 
@@ -145,7 +137,6 @@ fn number_grid_with_pipe() {
             filling: Filling::Text("|".into()),
             direction: Direction::LeftToRight,
             width: 24,
-            line_separator: "\n".into(),
         },
     );
 
@@ -162,7 +153,6 @@ fn huge_separator() {
             filling: Filling::Spaces(100),
             direction: Direction::LeftToRight,
             width: 99,
-            line_separator: "\n".into(),
         },
     );
     assert_eq!(grid.row_count(), 2);
@@ -176,7 +166,6 @@ fn huge_yet_unused_separator() {
             filling: Filling::Spaces(100),
             direction: Direction::LeftToRight,
             width: 99,
-            line_separator: "\n".into(),
         },
     );
 
@@ -195,7 +184,6 @@ fn emoji() {
             direction: Direction::LeftToRight,
             filling: Filling::Spaces(2),
             width: 12,
-            line_separator: "\n".into(),
         },
     );
     assert_eq!("🦀    hello\n👩‍🔬  hello\n", grid.to_string());
@@ -213,7 +201,6 @@ fn possible_underflow() {
             direction: Direction::TopToBottom,
             filling: Filling::Text(" | ".into()),
             width: 15,
-            line_separator: "\n".into(),
         },
     );
 
@@ -228,7 +215,6 @@ fn huge_width_does_not_overflow() {
             direction: Direction::LeftToRight,
             filling: Filling::Spaces(2),
             width: usize::MAX,
-            line_separator: "\n".into(),
         },
     );
 
@@ -243,7 +229,6 @@ fn exact_fit() {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 4,
-            line_separator: "\n".into(),
         },
     );
 
@@ -261,7 +246,6 @@ fn eza_many_folders() {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 166,
-            line_separator: "\n".into(),
         },
     );
 
@@ -282,7 +266,6 @@ fn filling_with_tabs() {
                 tab_size: 2,
             },
             width: 24,
-            line_separator: "\n".into(),
         },
     );
 
@@ -302,7 +285,6 @@ fn padding_bigger_than_widest() {
                 tab_size: SPACES_IN_TAB,
             },
             width: 20,
-            line_separator: "\n".into(),
         },
     );
 
@@ -319,7 +301,6 @@ fn odd_number_of_entries() {
             direction: Direction::LeftToRight,
             filling: Filling::Spaces(2),
             width: 15,
-            line_separator: "\n".into(),
         },
     );
 
@@ -331,7 +312,6 @@ fn odd_number_of_entries() {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 15,
-            line_separator: "\n".into(),
         },
     );
 
@@ -352,7 +332,6 @@ fn different_size_separator_with_tabs() {
                 tab_size: 2,
             },
             width: 40,
-            line_separator: "\n".into(),
         },
     );
 
@@ -371,7 +350,6 @@ fn use_max_possible_width() {
             filling: Filling::Text("||".to_string()),
             direction: Direction::LeftToRight,
             width: 69,
-            line_separator: "\n".into(),
         },
     );
 
@@ -392,7 +370,6 @@ fn dont_use_max_possible_width() {
             filling: Filling::Text("||".to_string()),
             direction: Direction::TopToBottom,
             width: 69,
-            line_separator: "\n".into(),
         },
     );
 
@@ -410,7 +387,6 @@ fn use_minimal_optimal_lines() {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 6,
-            line_separator: "\n".into(),
         },
     );
 
@@ -428,7 +404,6 @@ fn weird_column_edge_case() {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 21,
-            line_separator: "\n".into(),
         },
     );
 
@@ -458,7 +433,6 @@ fn all_cells_fit_on_one_row_when_widths_vary() {
             direction: Direction::LeftToRight,
             filling: Filling::Spaces(1),
             width: 9,
-            line_separator: "\n".into(),
         },
     );
 
@@ -498,7 +472,6 @@ mod uutils_ls {
                     direction: Direction::TopToBottom,
                     filling: Filling::Spaces(2),
                     width,
-                    line_separator: "\n".into(),
                 },
             );
             assert_eq!(expected, grid.to_string());
@@ -518,7 +491,6 @@ mod uutils_ls {
                 direction: Direction::LeftToRight,
                 filling: Filling::Spaces(2),
                 width: 30,
-                line_separator: "\n".into(),
             },
         );
 
@@ -541,7 +513,6 @@ mod uutils_ls {
                 direction: Direction::TopToBottom,
                 filling: Filling::Spaces(2),
                 width: 30,
-                line_separator: "\n".into(),
             },
         );
 
@@ -559,7 +530,6 @@ mod uutils_ls {
                 direction: Direction::TopToBottom,
                 filling: Filling::Spaces(2),
                 width: 15,
-                line_separator: "\n".into(),
             },
         );
 
@@ -575,9 +545,9 @@ fn line_separator_nul() {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 5,
-            line_separator: "\0".into(),
         },
-    );
+    )
+    .with_line_separator("\0");
     assert_eq!("a  c\0b  d\0", grid.to_string());
 }
 
@@ -589,9 +559,9 @@ fn line_separator_crlf() {
             direction: Direction::LeftToRight,
             filling: Filling::Spaces(2),
             width: 5,
-            line_separator: "\r\n".into(),
         },
-    );
+    )
+    .with_line_separator("\r\n");
     assert_eq!("a  b\r\nc  d\r\n", grid.to_string());
 }
 
@@ -603,9 +573,9 @@ fn line_separator_empty() {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 40,
-            line_separator: "".into(),
         },
-    );
+    )
+    .with_line_separator("");
     assert_eq!("a  b", grid.to_string());
 }
 
@@ -618,23 +588,23 @@ fn line_separator_runtime_string() {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 5,
-            line_separator: sep.into(),
         },
-    );
+    )
+    .with_line_separator(sep);
     assert_eq!("a  c--sep--\nb  d--sep--\n", grid.to_string());
 }
 
 #[test]
-fn line_separator_builder() {
+fn empty_grid_with_custom_separator() {
     let grid = Grid::new(
-        vec!["a", "b"],
+        Vec::<String>::new(),
         GridOptions {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 40,
-            line_separator: "\n".into(),
         },
     )
     .with_line_separator("\0");
-    assert_eq!("a  b\0", grid.to_string());
+
+    assert_eq!("", grid.to_string());
 }

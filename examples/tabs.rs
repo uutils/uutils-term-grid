@@ -25,7 +25,6 @@ fn main() {
                 tab_size: 8,
             },
             width: 80,
-            ..Default::default()
         },
     );
 

@@ -75,29 +75,6 @@ pub struct GridOptions {
 
     /// The width to fill with the grid
     pub width: usize,
-
-    /// The string to put at the end of each line/row in the grid (`"\n"` or `"\0"`)
-    pub line_separator: Cow<'static, str>,
-}
-
-impl Default for GridOptions {
-    fn default() -> Self {
-        Self {
-            direction: Direction::LeftToRight,
-            filling: Filling::Spaces(DEFAULT_SEPARATOR_SIZE),
-            width: 0,
-            line_separator: Cow::Borrowed("\n"),
-        }
-    }
-}
-
-impl GridOptions {
-    /// Sets a custom line separator.
-    #[must_use]
-    pub fn with_line_separator(mut self, separator: impl Into<Cow<'static, str>>) -> Self {
-        self.line_separator = separator.into();
-        self
-    }
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -130,6 +107,7 @@ pub struct Grid<T: AsRef<str>> {
     widths: Vec<usize>,
     widest_cell_width: usize,
     dimensions: Dimensions,
+    line_separator: Cow<'static, str>,
 }
 
 impl<T: AsRef<str>> Grid<T> {
@@ -148,6 +126,7 @@ impl<T: AsRef<str>> Grid<T> {
                 num_rows: 0,
                 widths: Vec::new(),
             },
+            line_separator: Cow::Borrowed("\n"),
         };
 
         if !grid.cells.is_empty() {
@@ -160,13 +139,8 @@ impl<T: AsRef<str>> Grid<T> {
     /// Sets a custom line separator for formatting the grid.
     #[must_use]
     pub fn with_line_separator(mut self, separator: impl Into<Cow<'static, str>>) -> Self {
-        self.options.line_separator = separator.into();
+        self.line_separator = separator.into();
         self
-    }
-
-    /// Sets the line separator to put at the end of each row in the grid.
-    pub fn set_line_separator(&mut self, separator: impl Into<Cow<'static, str>>) {
-        self.options.line_separator = separator.into();
     }
 
     /// The number of terminal columns this display takes up, based on the separator
@@ -380,7 +354,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                     cursor += total_spaces;
                 }
             }
-            f.write_str(&self.options.line_separator)?;
+            f.write_str(&self.line_separator)?;
         }
 
         Ok(())
