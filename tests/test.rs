@@ -536,3 +536,75 @@ mod uutils_ls {
         assert_eq!("a  a-long-name\nb  z\n", grid.to_string());
     }
 }
+
+#[test]
+fn line_separator_nul() {
+    let grid = Grid::new(
+        vec!["a", "b", "c", "d"],
+        GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Spaces(2),
+            width: 5,
+        },
+    )
+    .with_line_separator("\0");
+    assert_eq!("a  c\0b  d\0", grid.to_string());
+}
+
+#[test]
+fn line_separator_crlf() {
+    let grid = Grid::new(
+        vec!["a", "b", "c", "d"],
+        GridOptions {
+            direction: Direction::LeftToRight,
+            filling: Filling::Spaces(2),
+            width: 5,
+        },
+    )
+    .with_line_separator("\r\n");
+    assert_eq!("a  b\r\nc  d\r\n", grid.to_string());
+}
+
+#[test]
+fn line_separator_empty() {
+    let grid = Grid::new(
+        vec!["a", "b"],
+        GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Spaces(2),
+            width: 40,
+        },
+    )
+    .with_line_separator("");
+    assert_eq!("a  b", grid.to_string());
+}
+
+#[test]
+fn line_separator_runtime_string() {
+    let sep = format!("--{}--\n", "sep");
+    let grid = Grid::new(
+        vec!["a", "b", "c", "d"],
+        GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Spaces(2),
+            width: 5,
+        },
+    )
+    .with_line_separator(sep);
+    assert_eq!("a  c--sep--\nb  d--sep--\n", grid.to_string());
+}
+
+#[test]
+fn empty_grid_with_custom_separator() {
+    let grid = Grid::new(
+        Vec::<String>::new(),
+        GridOptions {
+            direction: Direction::TopToBottom,
+            filling: Filling::Spaces(2),
+            width: 40,
+        },
+    )
+    .with_line_separator("\0");
+
+    assert_eq!("", grid.to_string());
+}

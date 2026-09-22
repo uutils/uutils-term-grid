@@ -11,6 +11,7 @@
 #![doc = include_str!("../README.md")]
 
 use ansi_width::ansi_width;
+use std::borrow::Cow;
 use std::fmt;
 
 /// Number of spaces in one \t.
@@ -106,6 +107,7 @@ pub struct Grid<T: AsRef<str>> {
     widths: Vec<usize>,
     widest_cell_width: usize,
     dimensions: Dimensions,
+    line_separator: Cow<'static, str>,
 }
 
 impl<T: AsRef<str>> Grid<T> {
@@ -124,6 +126,7 @@ impl<T: AsRef<str>> Grid<T> {
                 num_rows: 0,
                 widths: Vec::new(),
             },
+            line_separator: Cow::Borrowed("\n"),
         };
 
         if !grid.cells.is_empty() {
@@ -131,6 +134,13 @@ impl<T: AsRef<str>> Grid<T> {
         }
 
         grid
+    }
+
+    /// Sets a custom line separator for formatting the grid.
+    #[must_use]
+    pub fn with_line_separator(mut self, separator: impl Into<Cow<'static, str>>) -> Self {
+        self.line_separator = separator.into();
+        self
     }
 
     /// The number of terminal columns this display takes up, based on the separator
@@ -344,7 +354,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                     cursor += total_spaces;
                 }
             }
-            f.write_str("\n")?;
+            f.write_str(&self.line_separator)?;
         }
 
         Ok(())

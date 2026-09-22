@@ -92,6 +92,15 @@ five six seven  eight
 nine ten eleven twelve
 ```
 
+By default, each row ends with a newline (`"\n"`). A custom line separator (such as `"\0"` or `"\r\n"`) can be configured using [`Grid::with_line_separator`]:
+
+```rust
+# use term_grid::{Grid, GridOptions, Direction, Filling};
+# let cells = vec!["one", "two", "three", "four"];
+# let options = GridOptions { filling: Filling::Spaces(1), direction: Direction::LeftToRight, width: 24 };
+let grid = Grid::new(cells, options).with_line_separator("\0");
+```
+
 [filling]: https://docs.rs/uutils_term_grid/latest/term_grid/struct.GridOptions.html#structfield.filling
 [direction]: https://docs.rs/uutils_term_grid/latest/term_grid/struct.GridOptions.html#structfield.direction
 [width]: https://docs.rs/uutils_term_grid/latest/term_grid/struct.GridOptions.html#structfield.width
@@ -100,6 +109,7 @@ nine ten eleven twelve
 [Spaces]: https://docs.rs/uutils_term_grid/latest/term_grid/enum.Filling.html#variant.Spaces
 [Text]: https://docs.rs/uutils_term_grid/latest/term_grid/enum.Filling.html#variant.Text
 [Tabs]:https://docs.rs/uutils_term_grid/latest/term_grid/enum.Filling.html#variant.Tabs
+[Grid::with_line_separator]: https://docs.rs/uutils_term_grid/latest/term_grid/struct.Grid.html#method.with_line_separator
 
 ## Width of grid cells
 
