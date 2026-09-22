@@ -22,7 +22,7 @@ fn main() {
             direction: Direction::TopToBottom,
             filling: Filling::Text(" | ".into()),
             width: 80,
-            line_separator: "\n",
+            line_separator: "\n".into(),
         },
     );
 

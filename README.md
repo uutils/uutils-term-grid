@@ -80,7 +80,7 @@ let grid = Grid::new(
         filling: Filling::Spaces(1),
         direction: Direction::LeftToRight,
         width: 24,
-        line_separator: "\n",
+        line_separator: "\n".into(),
     }
 );
 
