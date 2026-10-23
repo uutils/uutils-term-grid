@@ -34,7 +34,7 @@ The Minimum Supported Rust Version is 1.70.
 To add data to a grid, first create a new [`Grid`] value with a list of strings
 and a set of options.
 
-There are three options that must be specified in the [`GridOptions`] value that
+There are four options that can be specified in the [`GridOptions`] value that
 dictate how the grid is formatted:
 
 - [`filling`][filling]: how to fill empty space between columns:
@@ -51,6 +51,7 @@ dictate how the grid is formatted:
     row.
 - [`width`][width]: the width to fill the grid into. Usually, this should be the
   width of the terminal.
+- [`line_separator`][line_separator]: the string to put at the end of each line/row in the grid. Defaults to `"\n"`.
 
 In practice, creating a grid can be done as follows:
 
@@ -77,6 +78,7 @@ let grid = Grid::new(
         filling: Filling::Spaces(1),
         direction: Direction::LeftToRight,
         width: 24,
+        ..Default::default()
     }
 );
 
@@ -92,24 +94,29 @@ five six seven  eight
 nine ten eleven twelve
 ```
 
-By default, each row ends with a newline (`"\n"`). A custom line separator (such as `"\0"` or `"\r\n"`) can be configured using [`Grid::with_line_separator`]:
+By default, each row ends with a newline (`"\n"`). A custom line separator (such as `"\0"` or `"\r\n"`) can be configured using [`line_separator`][line_separator]:
 
 ```rust
-# use term_grid::{Grid, GridOptions, Direction, Filling};
-# let cells = vec!["one", "two", "three", "four"];
-# let options = GridOptions { filling: Filling::Spaces(1), direction: Direction::LeftToRight, width: 24 };
-let grid = Grid::new(cells, options).with_line_separator("\0");
+use term_grid::{Grid, GridOptions, Direction, Filling};
+let cells = vec!["one", "two", "three", "four"];
+let options = GridOptions {
+    filling: Filling::Spaces(1),
+    direction: Direction::LeftToRight,
+    width: 24,
+    line_separator: "\0".into(),
+};
+let grid = Grid::new(cells, options);
 ```
 
 [filling]: https://docs.rs/uutils_term_grid/latest/term_grid/struct.GridOptions.html#structfield.filling
 [direction]: https://docs.rs/uutils_term_grid/latest/term_grid/struct.GridOptions.html#structfield.direction
 [width]: https://docs.rs/uutils_term_grid/latest/term_grid/struct.GridOptions.html#structfield.width
+[line_separator]: https://docs.rs/uutils_term_grid/latest/term_grid/struct.GridOptions.html#structfield.line_separator
 [LeftToRight]: https://docs.rs/uutils_term_grid/latest/term_grid/enum.Direction.html#variant.LeftToRight
 [TopToBottom]: https://docs.rs/uutils_term_grid/latest/term_grid/enum.Direction.html#variant.TopToBottom
 [Spaces]: https://docs.rs/uutils_term_grid/latest/term_grid/enum.Filling.html#variant.Spaces
 [Text]: https://docs.rs/uutils_term_grid/latest/term_grid/enum.Filling.html#variant.Text
 [Tabs]:https://docs.rs/uutils_term_grid/latest/term_grid/enum.Filling.html#variant.Tabs
-[Grid::with_line_separator]: https://docs.rs/uutils_term_grid/latest/term_grid/struct.Grid.html#method.with_line_separator
 
 ## Width of grid cells
 

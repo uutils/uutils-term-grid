@@ -11,7 +11,6 @@
 #![doc = include_str!("../README.md")]
 
 use ansi_width::ansi_width;
-use std::borrow::Cow;
 use std::fmt;
 
 /// Number of spaces in one \t.
@@ -19,6 +18,9 @@ pub const SPACES_IN_TAB: usize = 8;
 
 /// Default size for separator in spaces.
 pub const DEFAULT_SEPARATOR_SIZE: usize = 2;
+
+/// Default terminal width in columns.
+pub const DEFAULT_TERMINAL_WIDTH: usize = 80;
 
 /// Direction cells should be written in: either across or downwards.
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
@@ -75,6 +77,20 @@ pub struct GridOptions {
 
     /// The width to fill with the grid
     pub width: usize,
+
+    /// The string to put at the end of each line/row in the grid. Defaults to `"\n"`.
+    pub line_separator: String,
+}
+
+impl Default for GridOptions {
+    fn default() -> Self {
+        Self {
+            direction: Direction::LeftToRight,
+            filling: Filling::Spaces(DEFAULT_SEPARATOR_SIZE),
+            width: DEFAULT_TERMINAL_WIDTH,
+            line_separator: String::from("\n"),
+        }
+    }
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -107,7 +123,6 @@ pub struct Grid<T: AsRef<str>> {
     widths: Vec<usize>,
     widest_cell_width: usize,
     dimensions: Dimensions,
-    line_separator: Cow<'static, str>,
 }
 
 impl<T: AsRef<str>> Grid<T> {
@@ -126,7 +141,6 @@ impl<T: AsRef<str>> Grid<T> {
                 num_rows: 0,
                 widths: Vec::new(),
             },
-            line_separator: Cow::Borrowed("\n"),
         };
 
         if !grid.cells.is_empty() {
@@ -134,13 +148,6 @@ impl<T: AsRef<str>> Grid<T> {
         }
 
         grid
-    }
-
-    /// Sets a custom line separator for formatting the grid.
-    #[must_use]
-    pub fn with_line_separator(mut self, separator: impl Into<Cow<'static, str>>) -> Self {
-        self.line_separator = separator.into();
-        self
     }
 
     /// The number of terminal columns this display takes up, based on the separator
@@ -354,7 +361,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                     cursor += total_spaces;
                 }
             }
-            f.write_str(&self.line_separator)?;
+            f.write_str(&self.options.line_separator)?;
         }
 
         Ok(())
