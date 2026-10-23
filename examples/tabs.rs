@@ -24,7 +24,7 @@ fn main() {
                 spaces: DEFAULT_SEPARATOR_SIZE,
                 tab_size: 8,
             },
-            width: 80,
+            ..Default::default()
         },
     );
 

@@ -21,7 +21,7 @@ fn main() {
         GridOptions {
             direction: Direction::TopToBottom,
             filling: Filling::Text(" | ".into()),
-            width: 80,
+            ..Default::default()
         },
     );
 
