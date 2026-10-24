@@ -72,7 +72,7 @@ pub struct GridOptions {
     /// The direction that the cells should be written in. Defaults to [`Direction::LeftToRight`].
     pub direction: Direction,
 
-    /// The string to put in between each column of cells. Defaults to [`Filling::Spaces(DEFAULT_SEPARATOR_SIZE)`].
+    /// The string to put in between each column of cells. Defaults to [`Filling::Spaces(DEFAULT_SEPARATOR_SIZE)`][Filling::Spaces].
     pub filling: Filling,
 
     /// The width to fill with the grid. Defaults to [`DEFAULT_GRID_WIDTH`].
