@@ -19,6 +19,9 @@ pub const SPACES_IN_TAB: usize = 8;
 /// Default size for separator in spaces.
 pub const DEFAULT_SEPARATOR_SIZE: usize = 2;
 
+/// Default grid width in columns.
+pub const DEFAULT_GRID_WIDTH: usize = 80;
+
 /// Direction cells should be written in: either across or downwards.
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub enum Direction {
@@ -66,14 +69,28 @@ impl Filling {
 /// The options for a grid view that should be passed to [`Grid::new`]
 #[derive(Debug)]
 pub struct GridOptions {
-    /// The direction that the cells should be written in
+    /// The direction that the cells should be written in. Defaults to [`Direction::LeftToRight`].
     pub direction: Direction,
 
-    /// The string to put in between each column of cells
+    /// The string to put in between each column of cells. Defaults to [`Filling::Spaces(DEFAULT_SEPARATOR_SIZE)`][Filling::Spaces].
     pub filling: Filling,
 
-    /// The width to fill with the grid
+    /// The width to fill with the grid. Defaults to [`DEFAULT_GRID_WIDTH`].
     pub width: usize,
+
+    /// The string to put at the end of each line/row in the grid. Defaults to `"\n"`.
+    pub line_separator: String,
+}
+
+impl Default for GridOptions {
+    fn default() -> Self {
+        Self {
+            direction: Direction::LeftToRight,
+            filling: Filling::Spaces(DEFAULT_SEPARATOR_SIZE),
+            width: DEFAULT_GRID_WIDTH,
+            line_separator: String::from("\n"),
+        }
+    }
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -344,7 +361,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                     cursor += total_spaces;
                 }
             }
-            f.write_str("\n")?;
+            f.write_str(&self.options.line_separator)?;
         }
 
         Ok(())

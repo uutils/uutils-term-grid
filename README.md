@@ -34,23 +34,23 @@ The Minimum Supported Rust Version is 1.70.
 To add data to a grid, first create a new [`Grid`] value with a list of strings
 and a set of options.
 
-There are three options that must be specified in the [`GridOptions`] value that
-dictate how the grid is formatted:
+There are four options that can be configured in [`GridOptions`]. `GridOptions` implements `Default`, providing sensible defaults for all fields:
 
-- [`filling`][filling]: how to fill empty space between columns:
+- [`filling`][filling]: how to fill empty space between columns (defaults to [`Filling::Spaces(2)`][Spaces]):
   - [`Filling::Spaces`][Spaces] number of spaces between columns;
   - [`Filling::Text`][Text] text string separator between columns;
   - [`Filling::Tabs`][Tabs] special option which allows to set number of spaces between columns and set the size of `\t` character.
 - [`direction`][direction]: specifies whether the cells should go along rows, or
-  columns:
+  columns (defaults to [`Direction::LeftToRight`][LeftToRight]):
   - [`Direction::LeftToRight`][LeftToRight] starts them in the top left and
     moves _rightwards_, going to the start of a new row after reaching the final
     column;
   - [`Direction::TopToBottom`][TopToBottom] starts them in the top left and
     moves _downwards_, going to the top of a new column after reaching the final
     row.
-- [`width`][width]: the width to fill the grid into. Usually, this should be the
-  width of the terminal.
+- [`width`][width]: the width to fill the grid into (defaults to `80`). Usually, this should be the
+  actual width of the terminal.
+- [`line_separator`][line_separator]: the string to put at the end of each line/row in the grid (defaults to `"\n"`).
 
 In practice, creating a grid can be done as follows:
 
@@ -77,6 +77,7 @@ let grid = Grid::new(
         filling: Filling::Spaces(1),
         direction: Direction::LeftToRight,
         width: 24,
+        ..Default::default()
     }
 );
 
@@ -92,9 +93,24 @@ five six seven  eight
 nine ten eleven twelve
 ```
 
+By default, each row ends with a newline (`"\n"`). A custom line separator (such as `"\0"` or `"\r\n"`) can be configured using [`line_separator`][line_separator]:
+
+```rust
+use term_grid::{Grid, GridOptions, Direction, Filling};
+let cells = vec!["one", "two", "three", "four"];
+let options = GridOptions {
+    filling: Filling::Spaces(1),
+    direction: Direction::LeftToRight,
+    width: 24,
+    line_separator: "\0".into(),
+};
+let grid = Grid::new(cells, options);
+```
+
 [filling]: https://docs.rs/uutils_term_grid/latest/term_grid/struct.GridOptions.html#structfield.filling
 [direction]: https://docs.rs/uutils_term_grid/latest/term_grid/struct.GridOptions.html#structfield.direction
 [width]: https://docs.rs/uutils_term_grid/latest/term_grid/struct.GridOptions.html#structfield.width
+[line_separator]: https://docs.rs/uutils_term_grid/latest/term_grid/struct.GridOptions.html#structfield.line_separator
 [LeftToRight]: https://docs.rs/uutils_term_grid/latest/term_grid/enum.Direction.html#variant.LeftToRight
 [TopToBottom]: https://docs.rs/uutils_term_grid/latest/term_grid/enum.Direction.html#variant.TopToBottom
 [Spaces]: https://docs.rs/uutils_term_grid/latest/term_grid/enum.Filling.html#variant.Spaces
