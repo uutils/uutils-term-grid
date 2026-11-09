@@ -103,6 +103,7 @@ let options = GridOptions {
     direction: Direction::LeftToRight,
     width: 24,
     line_separator: "\0".into(),
+    ..Default::default()
 };
 let grid = Grid::new(cells, options);
 ```

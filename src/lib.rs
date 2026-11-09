@@ -11,6 +11,7 @@
 #![doc = include_str!("../README.md")]
 
 use ansi_width::ansi_width;
+use std::borrow::Cow;
 use std::fmt;
 
 /// Number of spaces in one \t.
@@ -79,7 +80,7 @@ pub struct GridOptions {
     pub width: usize,
 
     /// The string to put at the end of each line/row in the grid. Defaults to `"\n"`.
-    pub line_separator: String,
+    pub line_separator: Cow<'static, str>,
 }
 
 impl Default for GridOptions {
@@ -88,7 +89,7 @@ impl Default for GridOptions {
             direction: Direction::LeftToRight,
             filling: Filling::Spaces(DEFAULT_SEPARATOR_SIZE),
             width: DEFAULT_GRID_WIDTH,
-            line_separator: String::from("\n"),
+            line_separator: Cow::Borrowed("\n"),
         }
     }
 }
@@ -283,6 +284,8 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
         // get exactly right.
         let padding = " ".repeat(self.widest_cell_width + self.options.filling.width());
 
+        let line_separator = self.options.line_separator.as_ref();
+
         for y in 0..self.dimensions.num_rows {
             // Current position on the line.
             let mut cursor: usize = 0;
@@ -361,7 +364,7 @@ impl<T: AsRef<str>> fmt::Display for Grid<T> {
                     cursor += total_spaces;
                 }
             }
-            f.write_str(&self.options.line_separator)?;
+            f.write_str(line_separator)?;
         }
 
         Ok(())

@@ -7,7 +7,12 @@ use term_grid::{Direction, Filling, Grid, GridOptions, DEFAULT_SEPARATOR_SIZE, S
 
 #[test]
 fn default_options() {
-    let grid = Grid::new(vec!["a", "b", "c"], GridOptions::default());
+    let options = GridOptions::default();
+    assert!(matches!(
+        options.line_separator,
+        std::borrow::Cow::Borrowed("\n")
+    ));
+    let grid = Grid::new(vec!["a", "b", "c"], options);
     assert_eq!("a  b  c\n", grid.to_string());
 }
 
@@ -609,7 +614,7 @@ fn line_separator_empty() {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 40,
-            line_separator: String::new(),
+            line_separator: "".into(),
         },
     );
     assert_eq!("a  b", grid.to_string());
@@ -624,7 +629,7 @@ fn line_separator_runtime_string() {
             direction: Direction::TopToBottom,
             filling: Filling::Spaces(2),
             width: 5,
-            line_separator: sep,
+            line_separator: sep.into(),
         },
     );
     assert_eq!("a  c--sep--\nb  d--sep--\n", grid.to_string());
