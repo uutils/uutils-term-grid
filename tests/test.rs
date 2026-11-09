@@ -9,7 +9,7 @@ use term_grid::{Direction, Filling, Grid, GridOptions, DEFAULT_SEPARATOR_SIZE, S
 fn default_options() {
     let options = GridOptions::default();
     assert!(matches!(
-        options.line_separator,
+        &options.line_separator,
         std::borrow::Cow::Borrowed("\n")
     ));
     let grid = Grid::new(vec!["a", "b", "c"], options);
